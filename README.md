@@ -16,6 +16,7 @@ in the terminal
 
 ```bash
 #!/bin/bash
+clear
 echo "-------===[ DDBOX ]===-------"
 echo "《《《☆ SETUP+INSTALL ☆》》》"
 echo "by: D373Y 5373M"
@@ -68,7 +69,7 @@ sleep 5
 echo "Firing it up!"
 echo
 echo "Creating templates folder and"
-echo -n "Copying files:" | echo -n "."
+echo "Copying files:" | echo -n "."
 mkdir templates | echo -n "."
 cp base.html ./templates/base.html | echo -n "."
 cp boot.html ./templates/boot.html | echo -n "."
