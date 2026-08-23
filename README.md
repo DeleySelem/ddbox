@@ -6,7 +6,7 @@ SETUP
 
 1. Download the repo:
 
-bash ```
+```bash
 git clone https://github.com/deleyselem/ddbox
 ```
 
@@ -23,7 +23,7 @@ by: D373Y 5373M
 echo "IMPORTANT INFORMATION - READ!"
 
 echo "End-to-end encrypted group messaging."
-echo "Read README.md for full protocol listing,:
+echo "Read README.md for full protocol listing"
 echo "and detailed info about the weaknesses,"
 echo "you must understand and evaluate your"
 echo "level of curiosity for government hackers."
@@ -46,7 +46,7 @@ sleep 10
 echo "So what can you do to not get caught"
 echo "by feds?"
 echo
-echo "Allways read the code, understand the"
+echo "Always read the code, understand the"
 echo "level of security, and estimate your"
 echo "value to be hacked. Never install apps"
 echo "with code you do not understand how it"
@@ -64,22 +64,24 @@ echo "if you wish not for FBIs surveillance"
 echo "upon your ass."
 echo
 sleep 10
-echo "Fiering it up!"
+echo "Firing it up!"
 echo
-echo "Creating folder and copying"
-echo -n "files..." | echo -n "."
+echo "Creating folder and"
+echo -n "copying files:" | echo -n "."
 mkdir templates | echo -n "."
 cp base.html ./templates/base.html | echo -n "."
 cp boot.html ./templates/boot.html | echo -n "."
 cp home.html ./templates/home.html | echo -n "."
 cp room.html ./templates/room.html | echo -n "."
 echo -n "OK"
-echo Removing files copied to the 
-echo -n "templates folder" | echo -n "."
+echo
+echo
+echo-n "Removing files:"
+echo -n "t" | echo -n "."
 rm base.html | echo -n "."
 rm boot.html | echo -n "."
-rm home.html | echo -n ".OK"
-rm room.html | echo -n "."
+rm home.html | echo -n "."
+rm room.html | echo -n "...OK"
 ```
 
 # Encryption breakdown
