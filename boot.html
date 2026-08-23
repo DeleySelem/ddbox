@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+    <title>Loading DDBox...</title>
+    <style>
+        body { background: #0a0a0a; color: #9ab87a; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100dvh; margin:0; }
+        .loader { text-align: center; }
+        .spinner { display: inline-block; animation: spin 1s linear infinite; font-size: 4rem; }
+        p { font-size: 1.6rem; margin: 0.5rem 0; }
+        #status { font-size: 1.2rem; color:#6a7a5a; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <div class="spinner">☯</div>
+        <p>Decrypting chat room...</p>
+        <p id="status">Waiting...</p>
+    </div>
+    <script>
+        async function deriveKey(passphrase, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                "raw",
+                enc.encode(passphrase),
+                { name: "PBKDF2" },
+                false,
+                ["deriveKey"]
+            );
+            return crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: 100000,
+                    hash: "SHA-256"
+                },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["decrypt"]
+            );
+        }
+
+        async function decryptAES(encrypted, passphrase) {
+            const salt = Uint8Array.from(atob(encrypted.salt), c => c.charCodeAt(0));
+            const nonce = Uint8Array.from(atob(encrypted.nonce), c => c.charCodeAt(0));
+            const ciphertext = Uint8Array.from(atob(encrypted.ciphertext), c => c.charCodeAt(0));
+            const key = await deriveKey(passphrase, salt);
+            const plain = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: nonce },
+                key,
+                ciphertext
+            );
+            return new TextDecoder().decode(plain);
+        }
+
+        (async function() {
+            const status = document.getElementById('status');
+            try {
+                status.textContent = 'Fetching encrypted page...';
+                const resp = await fetch('/get_encrypted_page');
+                if (!resp.ok) {
+                    const text = await resp.text();
+                    throw new Error(`HTTP ${resp.status}: ${text}`);
+                }
+                const data = await resp.json();
+                status.textContent = 'Decrypting with AES...';
+                const plainHtml = await decryptAES(data.encrypted, data.passphrase);
+                document.open();
+                document.write(plainHtml);
+                document.close();
+            } catch (e) {
+                status.textContent = 'Error: ' + e.message;
+                console.error(e);
+            }
+        })();
+    </script>
+</body>
+</html>
