@@ -1,0 +1,457 @@
+{% extends 'base.html' %} {% block content %}
+<style>
+    /* Same appearance as before, but removed member-count span */
+    html, body { height: 100%; margin:0; overflow:hidden; }
+    body { background: #1a1a1a; color: #c0c0c0; font-family: 'Courier New', monospace; font-size: 18px; }
+    .content { height: 100dvh; display: flex; justify-content: center; align-items: center; padding: 0.5rem; }
+    .message-box {
+        background: rgba(0,0,0,0.78); backdrop-filter: blur(6px);
+        border: 1px solid #4a5d23; border-radius: 16px;
+        box-shadow: 0 0 40px rgba(0,0,0,0.9);
+        width: 100%; max-width: 900px; height: 95dvh;
+        display: flex; flex-direction: column; padding: 0.8rem 1rem;
+        position: relative; overflow: hidden;
+    }
+    .banner {
+        display: flex; justify-content: space-between; align-items: center;
+        border-bottom: 1px solid #3f5e1e; padding-bottom: 0.4rem;
+        margin-bottom: 0.6rem; flex-shrink: 0; flex-wrap: wrap; gap: 0.4rem;
+    }
+    .banner .left, .banner .right { display: flex; align-items: center; gap: 0.6rem; }
+    .banner .title {
+        display: flex; align-items: center; gap: 0.8rem;
+        color: #9ab87a; text-shadow: 0 0 8px #2a4a1a;
+        font-size: 1.2rem; flex: 1; justify-content: center;
+    }
+    .banner .title .room-code { color: #c0d0a0; font-weight: bold; background: rgba(30,50,20,0.4); padding: 0.1rem 0.6rem; border-radius: 12px; border: 1px solid #4a5d23; }
+    .banner .title .live-time { color: #8a9a7a; font-size: 0.9rem; background: rgba(0,0,0,0.3); padding: 0.1rem 0.6rem; border-radius: 12px; border: 1px solid #2a3a1a; }
+    .banner button { background: rgba(30,50,20,0.7); border: 1px solid #5a7a3a; color: #d0d0b0; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 1rem; font-family: inherit; transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem; }
+    .banner button:hover { background: #3f5e1e; box-shadow: 0 0 12px rgba(90,122,58,0.4); }
+    .messages {
+        flex: 1; overflow-y: auto; padding: 0.3rem 0.2rem;
+        margin-bottom: 0.4rem; border: 1px solid #2a3a1a; border-radius: 8px;
+        background: rgba(0,0,0,0.3); font-size: 1.1rem;
+    }
+    .messages::-webkit-scrollbar { width: 6px; }
+    .messages::-webkit-scrollbar-track { background: #1a1a1a; }
+    .messages::-webkit-scrollbar-thumb { background: #3f5e1e; border-radius: 4px; }
+    .text { display: flex; margin: 0.2rem 0; }
+    .text.self { justify-content: flex-end; }
+    .text.other { justify-content: flex-start; }
+    .text.system { justify-content: center; }
+    .bubble { max-width: 80%; padding: 0.4rem 0.8rem; border-radius: 12px; background: rgba(30,40,20,0.5); border-left: 3px solid #4a5d23; word-break: break-word; }
+    .bubble.self { background: rgba(40,60,30,0.6); border-left-color: #7a8f5a; }
+    .message-content { font-size: 1.1rem; }
+    .message-content strong { color: #9ab87a; margin-right: 0.4rem; }
+    .timestamp { font-size: 0.7rem; color: #6a7a5a; margin-top: 0.1rem; text-align: right; }
+    .system-notification { text-align: center; color: #8a9a7a; font-style: italic; font-size: 0.9rem; padding: 0.1rem 0; margin: 0.1rem 0; background: transparent; border: none; }
+    .inputs { display: flex; gap: 0.6rem; flex-shrink: 0; margin-top: 0.2rem; }
+    .inputs input { flex: 1; background: rgba(10,20,5,0.7); border: 1px solid #4a5d23; padding: 0.8rem 1rem; border-radius: 8px; color: #d0d0b0; font-family: inherit; font-size: 1.2rem; }
+    .inputs input:focus { outline: none; border-color: #9ab87a; box-shadow: 0 0 12px rgba(154,184,122,0.2); }
+    .inputs button { background: #3f5e1e; border: 1px solid #6a8f4a; color: #e8f0d0; padding: 0.8rem 1.4rem; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 1.2rem; transition: all 0.2s; }
+    .inputs button:hover { background: #5a7a3a; box-shadow: 0 0 15px rgba(90,122,58,0.4); }
+
+    .popup-overlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    .popup-overlay.active { opacity: 1; pointer-events: auto; }
+    .popup-box { background: rgba(10,16,6,0.92); border: 1px solid #5a7a3a; box-shadow: 0 0 40px rgba(0,0,0,0.9); color: #c0d0b0; font-family: 'Courier New', monospace; transform: translateX(-100%); transition: transform 0.3s ease; overflow-y: auto; margin: auto; }
+    .popup-overlay.active .popup-box { transform: translateX(0); }
+    #user-popup { justify-content: flex-start; align-items: stretch; background: rgba(0,0,0,0.3); backdrop-filter: blur(2px); }
+    #user-popup .popup-box { border-radius: 0 16px 16px 0; padding: 1.5rem; max-width: 300px; width: 85%; height: 100%; max-height: 100vh; box-shadow: 4px 0 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; margin: 0; }
+    #user-popup .popup-box h3 { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3f5e1e; padding-bottom: 0.4rem; margin-bottom: 0.8rem; color: #9ab87a; font-size: 1.4rem; flex-shrink: 0; }
+    #user-popup .popup-box h3 .close-btn { background: none; border: none; color: #7a8a5a; font-size: 1.6rem; cursor: pointer; }
+    #user-popup .popup-box ul { list-style: none; padding: 0; flex: 1; overflow-y: auto; }
+    #user-popup .popup-box ul li { padding: 0.5rem 0.2rem; border-bottom: 1px solid #1a2a0a; display: flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; font-size: 1.1rem; }
+    #user-popup .popup-box ul li .fingerprint { font-size: 0.7rem; color: #7a8a5a; font-family: monospace; }
+    #user-popup .popup-box ul li::before { content: "▸"; color: #6a8f4a; margin-right: 0.5rem; align-self: flex-start; }
+    #log-popup, #info-popup { justify-content: center; align-items: center; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); }
+    #log-popup .popup-box, #info-popup .popup-box { border-radius: 16px; padding: 1.8rem; max-width: 450px; width: 90%; max-height: 70vh; margin: auto; box-shadow: 0 0 40px rgba(0,0,0,0.9); }
+    #log-popup .popup-box h3, #info-popup .popup-box h3 { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3f5e1e; padding-bottom: 0.4rem; margin-bottom: 0.8rem; color: #9ab87a; font-size: 1.4rem; }
+    #log-popup .popup-box h3 .close-btn, #info-popup .popup-box h3 .close-btn { background: none; border: none; color: #7a8a5a; font-size: 1.6rem; cursor: pointer; }
+    .popup-box .log-entry { padding: 0.4rem 0; border-bottom: 1px solid #1a2a0a; font-size: 1rem; }
+    .popup-box .log-entry .log-name { color: #9ab87a; font-weight: bold; }
+    .popup-box .log-entry.system { color: #7a8a5a; font-style: italic; }
+
+    @media (max-width: 600px) {
+        .banner .title { font-size: 1rem; flex-wrap: wrap; }
+        .banner .title .live-time { font-size: 0.7rem; }
+        .inputs input, .inputs button { font-size: 1rem; padding: 0.6rem 0.8rem; }
+        #user-popup .popup-box { max-width: 250px; padding: 1rem; }
+        #log-popup .popup-box, #info-popup .popup-box { padding: 1rem; max-width: 95%; }
+    }
+</style>
+
+<div class="message-box">
+    <div class="banner">
+        <div class="left">
+            <button id="users-btn">👥 Users</button>
+        </div>
+        <div class="title">
+            <span>DDBox</span>
+            <span class="room-code" id="room-code-display">{{code}}</span>
+            <span class="live-time" id="live-time">00:00:00</span>
+        </div>
+        <div class="right">
+            <button id="info-btn">ℹ️ Info</button>
+            <button id="logs-btn">📜 Logs</button>
+            <button id="leave-room-btn">🚪 Leave</button>
+        </div>
+    </div>
+
+    <div class="messages" id="messages-container"></div>
+
+    <div class="inputs">
+        <input type="text" id="message" placeholder="Type your message..." autofocus />
+        <button id="send-btn">Send</button>
+    </div>
+</div>
+
+<!-- User Popup -->
+<div class="popup-overlay" id="user-popup">
+    <div class="popup-box">
+        <h3><span>👥 Users</span><i class="fas fa-times close-btn" id="close-user-popup"></i></h3>
+        <ul id="user-list"></ul>
+    </div>
+</div>
+<!-- Logs Popup -->
+<div class="popup-overlay" id="log-popup">
+    <div class="popup-box">
+        <h3><span>📜 Logs</span><i class="fas fa-times close-btn" id="close-log-popup"></i></h3>
+        <div id="log-content"></div>
+    </div>
+</div>
+<!-- Info Popup -->
+
+<div class="popup-overlay" id="info-popup">
+    <div class="popup-box">
+        <h3><span>ℹ️ Encryption & Safety</span><i class="fas fa-times close-btn" id="close-info-popup"></i></h3>
+        <div id="info-content">
+            <p><strong>AES-256-GCM</strong> – Page encryption using a random passphrase.</p>
+            <p><strong>ECDH P-256</strong> – For secure group key distribution.</p>
+            <p><strong>AES-GCM</strong> – Group key encryption for messages.</p>
+            <p><strong>Server‑mediated encryption</strong> – The server distributes the group key and relays ciphertexts, but does <em>not</em> decrypt your messages. However, the server does have the group key in memory, so a compromised server could potentially decrypt stored messages.</p>
+            <p><strong>No plaintext logs</strong> – Only ciphertexts and metadata are stored on the server.</p>       
+            <p><strong>Key rotation</strong> – Group key is automatically rotated every 5 minutes.</p>
+            <p><strong>Fingerprints</strong> – Each user's public key fingerprint is shown in the user list for verification.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const roomCode = "{{ code }}";
+    const publicKeyB64 = "{{ public_key }}";
+    const name = "{{ name }}".trim();
+
+    let socket;
+    let userPrivateKey;
+    let userPublicKeyB64;
+    let groupKey;
+    let groupKeyRaw;
+    let isSending = false;
+
+    // ==== Crypto functions ====
+    async function generateECDHKeyPair() {
+        return await window.crypto.subtle.generateKey(
+            { name: "ECDH", namedCurve: "P-256" },
+            true,
+            ["deriveKey", "deriveBits"]
+        );
+    }
+
+    async function exportPublicKey(publicKey) {
+        const raw = await window.crypto.subtle.exportKey("raw", publicKey);
+        return btoa(String.fromCharCode(...new Uint8Array(raw)));
+    }
+
+    async function importPublicKey(b64) {
+        const raw = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        return await window.crypto.subtle.importKey(
+            "raw",
+            raw,
+            { name: "ECDH", namedCurve: "P-256" },
+            false,
+            []
+        );
+    }
+
+    async function deriveSharedSecret(privateKey, publicKey) {
+        const bits = await window.crypto.subtle.deriveBits(
+            { name: "ECDH", public: publicKey },
+            privateKey,
+            256
+        );
+        return new Uint8Array(bits);
+    }
+
+    async function importGroupKey(raw) {
+        return await window.crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+    }
+
+    async function decryptWithPrivateKey(privateKey, encryptedObj) {
+        // encryptedObj: { ephemeral_pub (b64), iv (b64), ciphertext (b64) }
+        const ephemeralPubDer = Uint8Array.from(atob(encryptedObj.ephemeral_pub), c => c.charCodeAt(0));
+        const ephemeralPub = await window.crypto.subtle.importKey(
+            "spki",
+            ephemeralPubDer,
+            { name: "ECDH", namedCurve: "P-256" },
+            false,
+            []
+        );
+        const shared = await deriveSharedSecret(privateKey, ephemeralPub);
+        const hkdfKey = await window.crypto.subtle.importKey("raw", shared, { name: "HKDF" }, false, ["deriveKey"]);
+        const aesKey = await window.crypto.subtle.deriveKey(
+            {
+                name: "HKDF",
+                hash: "SHA-256",
+                salt: new Uint8Array(0),
+                info: new TextEncoder().encode("group-key-encryption")
+            },
+            hkdfKey,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["decrypt"]
+        );
+        const iv = Uint8Array.from(atob(encryptedObj.iv), c => c.charCodeAt(0));
+        const ciphertext = Uint8Array.from(atob(encryptedObj.ciphertext), c => c.charCodeAt(0));
+        const decrypted = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, aesKey, ciphertext);
+        return new Uint8Array(decrypted);
+    }
+
+    async function encryptWithGroupKey(plaintext) {
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encoded = new TextEncoder().encode(plaintext);
+        const encrypted = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, groupKey, encoded);
+        const combined = new Uint8Array(iv.length + encrypted.byteLength);
+        combined.set(iv, 0);
+        combined.set(new Uint8Array(encrypted), iv.length);
+        return btoa(String.fromCharCode(...combined));
+    }
+
+    async function decryptWithGroupKey(ciphertextB64) {
+        const data = Uint8Array.from(atob(ciphertextB64), c => c.charCodeAt(0));
+        const iv = data.slice(0, 12);
+        const ciphertext = data.slice(12);
+        const decrypted = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, groupKey, ciphertext);
+        return new TextDecoder().decode(decrypted);
+    }
+
+    // ==== Fingerprint helper ====
+    async function fingerprintPublicKey(b64) {
+        const raw = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const hash = await window.crypto.subtle.digest('SHA-256', raw);
+        const hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        return hex.substring(0, 8);
+    }
+
+    // ==== UI functions ====
+    function createMessage(name, msg, isSelf, timestamp) {
+        const container = document.getElementById('messages-container');
+        const isSystem = (name === 'system');
+        const div = document.createElement('div');
+        if (isSystem) {
+            div.className = 'system-notification';
+            div.textContent = `[${timestamp || ''}] ${msg}`;
+        } else {
+            const cls = (name === isSelf) ? 'self' : 'other';
+            div.className = `text ${cls}`;
+            const bubble = document.createElement('div');
+            bubble.className = `bubble ${cls}`;
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            const strong = document.createElement('strong');
+            strong.textContent = name;
+            content.appendChild(strong);
+            content.appendChild(document.createTextNode(`: ${msg}`));
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'timestamp';
+            timeDiv.textContent = timestamp || new Date().toLocaleString();
+            bubble.appendChild(content);
+            bubble.appendChild(timeDiv);
+            div.appendChild(bubble);
+        }
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function updateUserList(users) {
+        const list = document.getElementById('user-list');
+        // Clear the list
+        list.innerHTML = '';
+        if (!users || users.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'No users online.';
+            list.appendChild(li);
+            return;
+        }
+        // Compute fingerprints for all users in parallel
+        const promises = users.map(async (u) => {
+            let fp = null;
+            if (u.public_key) {
+                fp = await fingerprintPublicKey(u.public_key);
+            }
+            return { name: u.name, fingerprint: fp };
+        });
+        const userData = await Promise.all(promises);
+        // Render all items
+        for (const u of userData) {
+            const li = document.createElement('li');
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = u.name;
+            li.appendChild(nameSpan);
+            if (u.fingerprint) {
+                const fpSpan = document.createElement('span');
+                fpSpan.className = 'fingerprint';
+                fpSpan.textContent = `🔑 ${u.fingerprint}`;
+                li.appendChild(fpSpan);
+            }
+            list.appendChild(li);
+        }
+    }
+
+    function showPopup(id) { document.getElementById(id).classList.add('active'); }
+    function hidePopup(id) { document.getElementById(id).classList.remove('active'); }
+
+    // ==== Socket event handlers ====
+    async function init() {
+        const keyPair = await generateECDHKeyPair();
+        userPrivateKey = keyPair.privateKey;
+        userPublicKeyB64 = await exportPublicKey(keyPair.publicKey);
+
+        socket = io({ auth: { public_key: userPublicKeyB64 } });
+
+        socket.on('connect', () => console.log('Connected'));
+
+        socket.on('group_key', async (data) => {
+            try {
+                const rawKey = await decryptWithPrivateKey(userPrivateKey, data.encrypted_key);
+                groupKey = await importGroupKey(rawKey);
+                groupKeyRaw = rawKey;
+                // Request history
+                socket.emit('request_history');
+            } catch (e) {
+                console.error('Failed to decrypt group key', e);
+            }
+        });
+
+        socket.on('new_group_key', async (data) => {
+            try {
+                const rawKey = await decryptWithPrivateKey(userPrivateKey, data.encrypted_key);
+                groupKey = await importGroupKey(rawKey);
+                groupKeyRaw = rawKey;
+                createMessage('system', '🔑 Group key has been rotated.', 'system', new Date().toLocaleString());
+            } catch (e) {
+                console.error('Failed to decrypt new group key', e);
+            }
+        });
+
+        socket.on('history', async (history) => {
+            for (const item of history) {
+                try {
+                    const plain = await decryptWithGroupKey(item.ciphertext);
+                    createMessage(item.name, plain, item.name === name ? 'self' : 'other', item.timestamp);
+                } catch (e) {
+                    console.error('History decrypt error', e);
+                }
+            }
+        });
+
+        socket.on('message', async (data) => {
+            if (data.name === name) return;
+            try {
+                const plain = await decryptWithGroupKey(data.ciphertext);
+                createMessage(data.name, plain, data.name === name ? 'self' : 'other', data.timestamp);
+            } catch (e) {
+                console.error('Message decrypt error', e);
+            }
+        });
+
+        socket.on('system_message', (data) => {
+            createMessage('system', data.message, 'system', data.timestamp);
+        });
+
+        socket.on('update_user_list', (users) => {
+            updateUserList(users);
+        });
+
+        socket.on('update_member_count', (count) => {
+            document.getElementById('users-btn').textContent = `👥 Users (${count})`;
+        });
+
+        document.getElementById('send-btn').addEventListener('click', sendMessage);
+        document.getElementById('message').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+        document.getElementById('leave-room-btn').addEventListener('click', () => { socket.disconnect(); window.location.href = '/'; });
+
+        document.getElementById('users-btn').addEventListener('click', () => showPopup('user-popup'));
+        document.getElementById('close-user-popup').addEventListener('click', () => hidePopup('user-popup'));
+        document.getElementById('user-popup').addEventListener('click', (e) => { if (e.target === e.currentTarget) hidePopup('user-popup'); });
+
+        document.getElementById('logs-btn').addEventListener('click', async () => {
+            try {
+                const resp = await fetch(`/logs/${roomCode}`);
+                if (!resp.ok) throw new Error('Unauthorized');
+                const data = await resp.json();
+                const logContent = document.getElementById('log-content');
+                if (data.messages.length === 0) {
+                    logContent.textContent = 'No logs yet.';
+                } else {
+                    logContent.innerHTML = '';
+                    for (const m of data.messages) {
+                        const entry = document.createElement('div');
+                        entry.className = m.name === 'system' ? 'log-entry system' : 'log-entry';
+                        const span = document.createElement('span');
+                        span.className = 'log-name';
+                        span.textContent = m.name;
+                        entry.appendChild(span);
+                        entry.appendChild(document.createTextNode(' '));
+                        try {
+                            const plain = await decryptWithGroupKey(m.ciphertext);
+                            entry.appendChild(document.createTextNode(plain));
+                        } catch (e) {
+                            entry.appendChild(document.createTextNode('[decryption failed]'));
+                        }
+                        if (m.timestamp) {
+                            const ts = document.createElement('span');
+                            ts.className = 'timestamp';
+                            ts.textContent = ' ' + m.timestamp;
+                            entry.appendChild(ts);
+                        }
+                        logContent.appendChild(entry);
+                    }
+                }
+                showPopup('log-popup');
+            } catch (e) {
+                document.getElementById('log-content').textContent = 'Failed to load logs.';
+                showPopup('log-popup');
+            }
+        });
+        document.getElementById('close-log-popup').addEventListener('click', () => hidePopup('log-popup'));
+        document.getElementById('log-popup').addEventListener('click', (e) => { if (e.target === e.currentTarget) hidePopup('log-popup'); });
+
+        document.getElementById('info-btn').addEventListener('click', () => showPopup('info-popup'));
+        document.getElementById('close-info-popup').addEventListener('click', () => hidePopup('info-popup'));
+        document.getElementById('info-popup').addEventListener('click', (e) => { if (e.target === e.currentTarget) hidePopup('info-popup'); });
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('live-time').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    }
+
+    async function sendMessage() {
+        if (isSending) return;
+        const input = document.getElementById('message');
+        const text = input.value.trim();
+        if (!text || !groupKey) return;
+
+        isSending = true;
+        const ciphertext = await encryptWithGroupKey(text);
+        createMessage(name, text, name, new Date().toLocaleString());
+        socket.emit('message', { ciphertext });
+        input.value = '';
+        setTimeout(() => { isSending = false; }, 200);
+    }
+
+    init();
+</script>
+{% endblock %}
