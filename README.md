@@ -18,10 +18,10 @@ in the terminal
 #!/bin/bash
 echo "-------===[ DDBOX ]===-------"
 echo "《《《☆ SETUP+INSTALL ☆》》》"
-by: D373Y 5373M
+echo "by: D373Y 5373M"
 
 echo "IMPORTANT INFORMATION - READ!"
-
+echo
 echo "End-to-end encrypted group messaging."
 echo "Read README.md for full protocol listing"
 echo "and detailed info about the weaknesses,"
@@ -32,7 +32,7 @@ echo "friends, not a high alert, but selling"
 echo "weapons of mass destruction or child"
 echo "porn, you might want to concider another"
 echo "safer messaging system."
-sleep 10
+sleep 5
 echo 
 echo "Understanding the programs encryption"
 echo "level gives you not a false confidence"
@@ -42,10 +42,11 @@ echo "an FBI bate with which they busted 50 kg"
 echo "of marihuana before it got to Finland"
 echo "I heard all the phone calls..."
 echo
-sleep 10
+sleep 5
 echo "So what can you do to not get caught"
 echo "by feds?"
 echo
+echo "The best advice is: DO NOT BREAK THE LAW!"
 echo "Always read the code, understand the"
 echo "level of security, and estimate your"
 echo "value to be hacked. Never install apps"
@@ -58,15 +59,15 @@ echo "and I am sure the whole protocol is for" echo "catching pedophiles online.
 echo "AIs give you boobytrapped code if you"
 echo "ask it to do truly anonymous chat or"
 echo "market place. So read the code, or search"
-echo "for "gov", "@fbi" to see if it sends mail"
+echo "for "gov", "fbi" to see if it sends mail"
 echo "to FBI when run. Do not run such codes"
 echo "if you wish not for FBIs surveillance"
 echo "upon your ass."
 echo
-sleep 10
+sleep 5
 echo "Firing it up!"
 echo
-echo "Creating folder and"
+echo "Creating templates folder and"
 echo -n "copying files:" | echo -n "."
 mkdir templates | echo -n "."
 cp base.html ./templates/base.html | echo -n "."
@@ -76,7 +77,7 @@ cp room.html ./templates/room.html | echo -n "."
 echo -n "OK"
 echo
 echo
-echo-n "Removing files:"
+echo -n "Removing files:"
 echo -n "t" | echo -n "."
 rm base.html | echo -n "."
 rm boot.html | echo -n "."
@@ -300,3 +301,7 @@ Summary
 DDBox is a functional, well‑structured encrypted chat with a focus on ephemeral communication and a neat double‑encrypted page delivery. Its cryptographic choices (AES‑GCM, ECDH) are solid, and the implementation correctly uses Web Crypto APIs. However, its security hinges entirely on trusting the server – a design choice that makes it vulnerable to insider threats, server compromise, and impersonation. For a spy‑themed dead‑drop tool, this may be acceptable if the server is operated in a trusted environment and used with out‑of‑band verification, but it falls short of modern end‑to‑end encrypted messaging standards (like Signal or Matrix) that offer forward secrecy and strong identity verification.
 
 The weaknesses listed are not fatal for a learning project or a low‑risk internal tool, but they should be understood before deploying in any sensitive context.
+
+The app has few bugs. It repeats some messages.
+Also if you can improve the program contact me
+and I'll give you the permissions to contribute.
