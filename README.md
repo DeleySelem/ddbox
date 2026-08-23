@@ -59,7 +59,7 @@ echo "and I am sure the whole protocol is for" echo "catching pedophiles online.
 echo "AIs give you boobytrapped code if you"
 echo "ask it to do truly anonymous chat or"
 echo "market place. So read the code, or search"
-echo "for "gov", "fbi" to see if it sends mail"
+echo "for \"gov\", \"fbi\" to see if it sends mail"
 echo "to FBI when run. Do not run such codes"
 echo "if you wish not for FBIs surveillance"
 echo "upon your ass."
@@ -68,15 +68,13 @@ sleep 5
 echo "Firing it up!"
 echo
 echo "Creating templates folder and"
-echo -n "copying files:" | echo -n "."
+echo -n "Copying files:" | echo -n "."
 mkdir templates | echo -n "."
 cp base.html ./templates/base.html | echo -n "."
 cp boot.html ./templates/boot.html | echo -n "."
 cp home.html ./templates/home.html | echo -n "."
 cp room.html ./templates/room.html | echo -n "."
-echo -n "OK"
-echo
-echo
+echo "OK"
 echo -n "Removing files:"
 echo -n "t" | echo -n "."
 rm base.html | echo -n "."
