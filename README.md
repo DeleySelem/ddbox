@@ -298,10 +298,12 @@ The boot page uses document.write(plainHtml) after decryption. If the server’s
 
 Summary
 
-DDBox is a functional, well‑structured encrypted chat with a focus on ephemeral communication and a neat double‑encrypted page delivery. Its cryptographic choices (AES‑GCM, ECDH) are solid, and the implementation correctly uses Web Crypto APIs. However, its security hinges entirely on trusting the server – a design choice that makes it vulnerable to insider threats, server compromise, and impersonation. For a spy‑themed dead‑drop tool, this may be acceptable if the server is operated in a trusted environment and used with out‑of‑band verification, but it falls short of modern end‑to‑end encrypted messaging standards (like Signal or Matrix) that offer forward secrecy and strong identity verification.
+DDBox is a functional, well‑structured encrypted chat with a focus on ephemeral communication and a neat double‑encrypted page delivery. Its cryptographic choices (AES‑GCM, ECDH) are solid, and the implementation correctly uses Web Crypto APIs. However, its security hinges entirely on trusting the server – a design choice that makes it vulnerable to insider threats, server compromise, and impersonation. For a spy‑themed dead‑drop tool, this may be acceptable if the server is operated in a trusted environment and used with out‑of‑band verification, but it falls short of modern end‑to‑end encrypted messaging standards (like Signal or Matrix... Signal has actually been identified to be surveillanced by an unknown government agency by a program non-existent anymore. I have no intentions to avoid such surveillance and that is the very reason this program too, has the server side weaknesses. For transparency to act only as a legitimate messaging platform with absolutely zero possibilities to give users an illegal shield of anonymity, but only to make it a bit difficult to access by unwanted entities) that offer forward secrecy and strong identity verification.
 
 The weaknesses listed are not fatal for a learning project or a low‑risk internal tool, but they should be understood before deploying in any sensitive context.
 
 The app has few bugs. It repeats some messages.
 Also if you can improve the program contact me
 and I'll give you the permissions to contribute.
+
+mailto: deleyselem@proton.me
