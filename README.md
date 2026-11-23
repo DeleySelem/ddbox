@@ -71,6 +71,6 @@ The server listens on [http://0.0.0.0:5000](http://0.0.0.0:5000) ([http://127.0.
 ​No Forward Secrecy or Message Signatures: Group keys rotate every 5 minutes rather than per message, and messages are encrypted with a shared group key without per-message sender signatures or out-of-band key verification.  
 ​Basic Identity & Rate Limits: Display names are stored in the Flask session without cryptographic identity verification, and rate limits are basic in-memory per-IP and per-(room, name) checks.
   
-##​ Contact & Contributing
+# Contact & Contributing
 
 ​Author / maintainer contact listed in the project documentation: deleyselem@proton.me.  
