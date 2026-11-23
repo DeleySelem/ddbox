@@ -10,25 +10,20 @@ Installation on Android (Termux + proot-distro Debian)
 
 ​Open Termux and update packages, then install proot-distro and git (optional if you clone inside Debian, or clone directly here):
 
-``bash
 pkg update && pkg upgrade -y
 pkg install -y proot-distro git
-``
 
 2. Install and Enter Debian
 
 ​Install the Debian distribution and log into its shell:
 
-``bash
 proot-distro install debian
 proot-distro login debian
-``
 
 3. Install System Packages Inside Debian
 
 ​Inside the Debian shell (root@localhost:~# or your user prompt), update apt and install Python 3, pip, git, and build/crypto dependencies (build-essential, libffi-dev, python3-dev) in case cryptography needs to build or link native libraries on ARM/AArch64:
 
-bash``
 apt-get update && apt-get install -y \
   python3 \
   python3-pip \
@@ -37,28 +32,23 @@ apt-get update && apt-get install -y \
   build-essential \
   libffi-dev \
   git
-``
 
-##4. Clone DDBox and Run setup.sh
+4. Clone DDBox and Run setup.sh
 
 ​Clone the repository and run the included setup.sh script. It installs/updates flask, flask-socketio, and cryptography, ensures eventlet is not installed (since DDBox uses threading mode), and moves the .html templates (base.html, boot.html, home.html, room.html) into templates/:  
 
-``bash
 git clone https://github.com/deleyselem/ddbox
 cd ddbox
 chmod +x setup.sh
 ./setup.sh
-``
 
 Note on PEP 668 (externally-managed-environment): Modern Debian versions mark system Python as externally managed. setup.sh automatically falls back to --break-system-packages if needed, or you can create a virtual environment (python3 -m venv .venv && source .venv/bin/activate) before running setup.sh.
 
-##​5. Start the Server
+5. Start the Server
 
 ​Start DDBox inside the ddbox directory:
 
-``bash
 python3 main.py
-``
 
 The server listens on [http://0.0.0.0:5000](http://0.0.0.0:5000) ([http://127.0.0.1:5000](http://127.0.0.1:5000) locally).  
 ​HTTPS & Public Access (Important Notes)
@@ -81,6 +71,6 @@ The server listens on [http://0.0.0.0:5000](http://0.0.0.0:5000) ([http://127.0.
 ​No Forward Secrecy or Message Signatures: Group keys rotate every 5 minutes rather than per message, and messages are encrypted with a shared group key without per-message sender signatures or out-of-band key verification.  
 ​Basic Identity & Rate Limits: Display names are stored in the Flask session without cryptographic identity verification, and rate limits are basic in-memory per-IP and per-(room, name) checks.
   
-##​Contact & Contributing
+##​ Contact & Contributing
 
 ​Author / maintainer contact listed in the project documentation: deleyselem@proton.me.  
