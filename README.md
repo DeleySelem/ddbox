@@ -1,4 +1,4 @@
-##DDBox
+## DDBox
 
 ​DDBox is a web-based encrypted chat application built with Flask, Flask-SocketIO (async_mode='threading'), and the Web Crypto API. It uses ECDH (P-256) and AES-GCM for group messaging and delivers the chat room interface as an AES-GCM encrypted HTML blob decrypted client-side on /boot.
 
