@@ -2,11 +2,11 @@
 
 ​DDBox is a web-based encrypted chat application built with Flask, Flask-SocketIO (async_mode='threading'), and the Web Crypto API. It uses ECDH (P-256) and AES-GCM for group messaging and delivers the chat room interface as an AES-GCM encrypted HTML blob decrypted client-side on /boot.
 
-##Installation on Android (Termux + proot-distro Debian)
+Installation on Android (Termux + proot-distro Debian)
 
 ​Running DDBox on Android via Termux and proot-distro (Debian) gives you a standard apt and python3 environment while keeping the server isolated from Termux's native environment.
 
-##​1. Set Up Termux and Install proot-distro
+1. Set Up Termux and Install proot-distro
 
 ​Open Termux and update packages, then install proot-distro and git (optional if you clone inside Debian, or clone directly here):
 
@@ -15,7 +15,7 @@ pkg update && pkg upgrade -y
 pkg install -y proot-distro git
 ``
 
-##2. Install and Enter Debian
+2. Install and Enter Debian
 
 ​Install the Debian distribution and log into its shell:
 
@@ -24,11 +24,11 @@ proot-distro install debian
 proot-distro login debian
 ``
 
-##3. Install System Packages Inside Debian
+3. Install System Packages Inside Debian
 
 ​Inside the Debian shell (root@localhost:~# or your user prompt), update apt and install Python 3, pip, git, and build/crypto dependencies (build-essential, libffi-dev, python3-dev) in case cryptography needs to build or link native libraries on ARM/AArch64:
 
-``bash
+bash``
 apt-get update && apt-get install -y \
   python3 \
   python3-pip \
