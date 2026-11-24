@@ -1,16 +1,15 @@
-<!DOCTYPE html>                                                                                 <html>
-<head>                                                                                              <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">                                                                          <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Loading DDBox...</title>
     <style>
-        body { background: #0a0a0a; color: #9ab87a; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100dvh; margin:0; }
-        .loader { text-align: center; }
+        body { background: #0a0a0a; color: #9ab87a; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100dvh; margin:0; }                                    .loader { text-align: center; }
         .spinner { display: inline-block; animation: spin 1s linear infinite; font-size: 4rem; }
         p { font-size: 1.6rem; margin: 0.5rem 0; }
         #status { font-size: 1.2rem; color:#6a7a5a; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-    </style>
-</head>
+    </style>                                                                                    </head>
 <body>
     <div class="loader">
         <div class="spinner">☯</div>
@@ -28,8 +27,7 @@
                 ["deriveKey"]
             );
             return crypto.subtle.deriveKey(
-                {
-                    name: "PBKDF2",
+                {                                                                                                   name: "PBKDF2",
                     salt: salt,
                     iterations: 100000,
                     hash: "SHA-256"
