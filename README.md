@@ -6,21 +6,21 @@
 
 ​Running DDBox on Android via Termux and proot-distro (Debian) gives you a standard apt and python3 environment while keeping the server isolated from Termux's native environment.
 
-1. Set Up Termux and Install proot-distro
+### 1. Set Up Termux and Install proot-distro
 
 ​Open Termux and update packages, then install proot-distro and git (optional if you clone inside Debian, or clone directly here):
 
 pkg update && pkg upgrade -y
 pkg install -y proot-distro git
 
-2. Install and Enter Debian
+### 2. Install and Enter Debian
 
 ​Install the Debian distribution and log into its shell:
 
 proot-distro install debian
 proot-distro login debian
 
-3. Install System Packages Inside Debian
+### 3. Install System Packages Inside Debian
 
 ​Inside the Debian shell (root@localhost:~# or your user prompt), update apt and install Python 3, pip, git, and build/crypto dependencies (build-essential, libffi-dev, python3-dev) in case cryptography needs to build or link native libraries on ARM/AArch64:
 
@@ -33,7 +33,7 @@ apt-get update && apt-get install -y \
   libffi-dev \
   git
 
-4. Clone DDBox and Run setup.sh
+### 4. Clone DDBox and Run setup.sh
 
 ​Clone the repository and run the included setup.sh script. It installs/updates flask, flask-socketio, and cryptography, ensures eventlet is not installed (since DDBox uses threading mode), and moves the .html templates (base.html, boot.html, home.html, room.html) into templates/:  
 
@@ -44,7 +44,7 @@ chmod +x setup.sh
 
 Note on PEP 668 (externally-managed-environment): Modern Debian versions mark system Python as externally managed. setup.sh automatically falls back to --break-system-packages if needed, or you can create a virtual environment (python3 -m venv .venv && source .venv/bin/activate) before running setup.sh.
 
-5. Start the Server
+### 5. Start the Server
 
 ​Start DDBox inside the ddbox directory:
 
@@ -57,7 +57,7 @@ The server listens on [http://0.0.0.0:5000](http://0.0.0.0:5000) ([http://127.0.
 ​Keeping Termux Alive: Android may suspend background Termux sessions. In Termux (outside proot-distro), tap Acquire wake lock in the Termux notification drawer or run termux-wake-lock to prevent background throttling while hosting.
 ​Ephemeral State: Rooms, messages, keys, and rate-limit counters are stored in memory in main.py and reset when the server restarts.
   
-##​Architecture & Cryptography Overview
+##​ Architecture & Cryptography Overview
 
 ​Backend: Flask + Flask-SocketIO (async_mode='threading') + cryptography.  
 ​Frontend: Vanilla JavaScript using the browser's Web Crypto API (crypto.subtle).  
@@ -71,6 +71,6 @@ The server listens on [http://0.0.0.0:5000](http://0.0.0.0:5000) ([http://127.0.
 ​No Forward Secrecy or Message Signatures: Group keys rotate every 5 minutes rather than per message, and messages are encrypted with a shared group key without per-message sender signatures or out-of-band key verification.  
 ​Basic Identity & Rate Limits: Display names are stored in the Flask session without cryptographic identity verification, and rate limits are basic in-memory per-IP and per-(room, name) checks.
   
-# Contact & Contributing
+## Contact & Contributing
 
 ​Author / maintainer contact listed in the project documentation: deleyselem@proton.me.  
