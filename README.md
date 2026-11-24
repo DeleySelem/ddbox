@@ -1,7 +1,9 @@
 # DDBox
 
 DDBox is a web-based encrypted chat application built with Flask, Flask-SocketIO (async_mode='threading'), and the Web Crypto API alongside post-quantum primitives. It uses ML-KEM-1024 (FIPS 203) for group key encapsulation, ML-DSA-87 (FIPS 204) for message signing, and AES-256-GCM for message encryption and /boot page delivery.
-Installation on Android (Termux + proot-distro Debian)
+
+## Installation on Android (Termux + proot-distro Debian)
+
 Running DDBox on Android via Termux and proot-distro (Debian) provides an apt and python3 environment isolated from Termux's native environment.
 ## 1. Set Up Termux and Install proot-distro
  ​
