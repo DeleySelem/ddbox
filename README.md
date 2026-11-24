@@ -74,7 +74,6 @@ DDBox combines post-quantum cryptography (**FIPS 203** and **FIPS 204**), **AES-
 
 ### 1. Protocol & Primitive Matrix
 
-```text
 | Layer / Function | Algorithm / Standard | Where It Runs | Purpose & Scope |
 | :--- | :--- | :--- | :--- |
 | **Post-Quantum KEM** | **ML-KEM-1024** (FIPS 203, Cat. 5) | Browser (`@noble/post-quantum`) + Server (`fips203.EncapsulationKey.encaps()`) | Encapsulates a shared secret to wrap/distribute the server-managed room group key when Offline E2EE mode is off. |
