@@ -124,7 +124,7 @@ DDBox combines post-quantum cryptography (**FIPS 203** and **FIPS 204**), **AES-
          |                                                             |<-- 7. Receive ciphertext+sig -| (Server sees
          |                                                             |-- 8. Verify sig & decrypt      |  only ciphertext
          |                                                             |      with offline key          |  & ML-DSA-87 sig)
-
+```
 
 ### 3. Key Lifecycle, Controls & Trust Boundaries
 ​Group Key Rotation (Standard Mode)
