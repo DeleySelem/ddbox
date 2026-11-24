@@ -21,7 +21,7 @@ heat() {
             idx = int(seg);
             if (idx >= n - 1) idx = n - 2;
             frac = seg - idx;
-            split(arr[idx+1], a, ";");
+            split(arr[idx+1, a, ";");
             split(arr[idx+2], b, ";");
             r  = a[1] + (b[1] - a[1]) * frac;
             g  = a[2] + (b[2] - a[2]) * frac;
@@ -271,7 +271,7 @@ echo
 hr
 echo
 heat "         s e t u p   c o m p l e t e"
-echo[B
+echo
 printf "  ${C_LGRAY}start with:${RST}  ${C_WHITE}python3 main.py${RST}\n"
 printf "  ${C_LGRAY}then open:${RST}  ${C_BLUE}http://127.0.0.1:5000${RST}\n"
 printf "  ${C_DIM}async backend: threading (eventlet retired) | PQ: ML-KEM-1024 + ML-DSA-87${RST}\n"
