@@ -5,7 +5,7 @@ DDBox is a web-based encrypted chat application built with Flask, Flask-SocketIO
 ## Installation on Android (Termux + proot-distro Debian)
 
 Running DDBox on Android via Termux and proot-distro (Debian) provides an apt and python3 environment isolated from Termux's native environment.
-## 1. Set Up Termux and Install proot-distro
+### 1. Set Up Termux and Install proot-distro
  ​
 ```bash
 pkg update && pkg upgrade -y
@@ -13,14 +13,14 @@ pkg install -y proot-distro git
  ​
 ```
 
-## 2. Install and Enter Debian
+### 2. Install and Enter Debian
  ​
 ```bash
 proot-distro install debian
 proot-distro login debian
 ```
 
-## Install System Packages Inside Debian
+### Install System Packages Inside Debian
 
 ```bash
 apt-get update && apt-get install -y
@@ -32,9 +32,10 @@ build-essential
 libffi-dev
 git
 ```
+
 If fips203 reports that libfips203.so is missing during verification, install libfips203-0 via apt-get if available, or build libfips203.so from integritychain/fips203 (ffi) with cargo / rustc and place it in /usr/local/lib (or set FIPS203_PYTHON_TESTING_LIBRARY).
  ​
-## 4. Clone DDBox and Run setup.sh
+### 4. Clone DDBox and Run setup.sh
  ​
 ```bash
 git clone https://github.com/deleyselem/ddbox
@@ -42,9 +43,10 @@ cd ddbox
 chmod +x setup.sh
 bash setup.sh
 ```
+
 setup.sh installs/upgrades flask, flask-socketio, cryptography>=48, and fips203, verifies eventlet is not installed (threading mode is used), and moves .html templates into templates/.
  ​
-## 5. Start the Server
+### 5. Start the Server
  ​
 After installing and configuring ngrok:
 
