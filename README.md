@@ -103,6 +103,7 @@ Client                          Server
   |<-- 9. Verify DSA & decrypt ---|
 
 #### B. Offline E2EE Key Mode (Out-of-Band Key)
+
 ```text
 Host            Offline         Recipient         Server
   |-- 1. Check & Gen 64-hex ----->|                 |
