@@ -82,7 +82,7 @@ DDBox combines post-quantum cryptography (**FIPS 203** and **FIPS 204**), **AES-
 | **Offline E2EE Key Mode** | **Client-Generated 256-bit (64-hex) Key** + **AES-256-GCM** | Browser only (out-of-band / offline exchange) | Host generates and shares the full key offline; recipients paste & apply it after joining. Server never receives or stores the key. |
 | **Message Encryption** | **AES-256-GCM** (96-bit / 12-byte random IV) | Browser (`SubtleCrypto`) | Encrypts chat plaintext client-side before sending ciphertext over Socket.IO. |
 | **Encrypted Page Delivery** | **PBKDF2-HMAC-SHA256** (100,000 iter.) + **AES-256-GCM** | Server (`cryptography`) $\rightarrow$ Browser (`/boot` + `/get_encrypted_page`) | Encrypts rendered `room.html` with a per-room passphrase before client-side decryption in `/boot`. |
-| **Identity Fingerprints** | **SHA-256** (first 16 hex chars) | Browser (`SubtleCrypto.digest`) | Displays short fingerprints for ML-KEM-1024 encapsulation keys and ML-DSA-87 verification keys in the Users drawer. |
+| **Identity Fingerprints** | **SHA-256** (first 16 hex chars) | Browser (`SubtleCrypto.digest`) | Displays short fingerprints for ML-KEM-1024 encapsulation keys and ML-DSA-87 verification keys in the Users drawer. ||
 
 ---
 
