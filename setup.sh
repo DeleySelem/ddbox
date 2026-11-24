@@ -2,14 +2,10 @@
 # =============================================================
 #   DDBox - setup
 #   Installs build/PQ prerequisites, upgrades PQ Python deps,
-#   organizes templates, and verifies runtime imports
-# =============================================================
+#   organizes templates, and verifies runtime imports                                           # =============================================================
 set -uo pipefail
-
-RST=$'\033[0m'
-B=$'\033[1m'
-C_RED=$'\033[1;38;2;255;60;60m'
-C_LGRAY=$'\033[38;2;190;190;190m'
+                                                                                                RST=$'\033[0m'
+B=$'\033[1m'                                                                                    C_RED=$'\033[1;38;2;255;60;60m'                                                                 C_LGRAY=$'\033[38;2;190;190;190m'
 C_BLUE=$'\033[1;38;2;80;140;255m'
 C_WHITE=$'\033[1;38;2;255;255;255m'
 C_DIM=$'\033[2;38;2;150;150;150m'
@@ -18,10 +14,8 @@ heat() {
     awk -v text="$1" \
         -v stops="0;120;255 0;220;220 255;220;0 255;60;60" '
     BEGIN {
-        n = split(stops, arr, " ");
-        len = length(text);
-        for (i = 0; i < len; i++) {
-            ch  = substr(text, i+1, 1);
+        n = split(stops, arr, " ");                                                                     len = length(text);
+        for (i = 0; i < len; i++) {                                                                         ch  = substr(text, i+1, 1);
             pos = (len > 1) ? i / (len - 1) : 0;
             seg = pos * (n - 1);
             idx = int(seg);
