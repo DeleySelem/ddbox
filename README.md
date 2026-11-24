@@ -101,6 +101,7 @@ Client                          Server
   |-- 7. AES-GCM enc + DSA sign ->|
   |                               |-- 8. Verify DSA & relay
   |<-- 9. Verify DSA & decrypt ---|
+```
 
 #### B. Offline E2EE Key Mode (Out-of-Band Key)
 
