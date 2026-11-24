@@ -73,7 +73,7 @@ Server Trust Assumption: The server generates and holds group_key and page_passp
 DDBox combines post-quantum cryptography (**FIPS 203** and **FIPS 204**), **AES-256-GCM**, **HKDF / PBKDF2**, and an optional **Offline E2EE Key** mode so that messages remain encrypted on the client and—when offline E2EE is enabled—cannot be decrypted even if the server is compromised.
 
 ### 1. Protocol & Primitive Matrix
-
+```text
 | Layer / Function | Algorithm / Standard | Where It Runs | Purpose & Scope |
 | :--- | :--- | :--- | :--- |
 | **Post-Quantum KEM** | **ML-KEM-1024** (FIPS 203, Cat. 5) | Browser (`@noble/post-quantum`) + Server (`fips203.EncapsulationKey.encaps()`) | Encapsulates a shared secret to wrap/distribute the server-managed room group key when Offline E2EE mode is off. |
@@ -83,8 +83,7 @@ DDBox combines post-quantum cryptography (**FIPS 203** and **FIPS 204**), **AES-
 | **Message Encryption** | **AES-256-GCM** (96-bit / 12-byte random IV) | Browser (`SubtleCrypto`) | Encrypts chat plaintext client-side before sending ciphertext over Socket.IO. |
 | **Encrypted Page Delivery** | **PBKDF2-HMAC-SHA256** (100,000 iter.) + **AES-256-GCM** | Server (`cryptography`) $\rightarrow$ Browser (`/boot` + `/get_encrypted_page`) | Encrypts rendered `room.html` with a per-room passphrase before client-side decryption in `/boot`. |
 | **Identity Fingerprints** | **SHA-256** (first 16 hex chars) | Browser (`SubtleCrypto.digest`) | Displays short fingerprints for ML-KEM-1024 encapsulation keys and ML-DSA-87 verification keys in the Users drawer. ||
-
----
+```
 
 ### 2. End-to-End Protocol Flows
 
@@ -102,7 +101,7 @@ Client                          Server
   |<-- 9. Verify DSA & decrypt ---|
 
 #### B. Offline E2EE Key Mode (Out-of-Band Key)
-
+```text
 Host            Offline         Recipient         Server
   |-- 1. Check & Gen 64-hex ----->|                 |
   |                 |-- 2. Key -->|                 |
@@ -110,7 +109,7 @@ Host            Offline         Recipient         Server
   |-- 4. AES-GCM enc + DSA sign ------------------->|
   |                               |<-- 5. Cipher + sig
   |                               |-- 6. Verify & dec
+```
 
-
-Contact
+## Contact
 Author / maintainer contact: deleyselem@proton.me.
