@@ -3,8 +3,7 @@
 
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from flask_socketio import SocketIO, join_room, emit
-import os
-import re
+import os                                                                                       import re
 import time
 import json
 import secrets
@@ -24,11 +23,9 @@ MLKEM_1024_SS_LEN = 32
 
 try:
     from fips203 import ML_KEM_1024, EncapsulationKey
-    MLKEM_1024_EK_LEN = getattr(ML_KEM_1024, "EK_SIZE", 1568)
-    MLKEM_1024_CT_LEN = getattr(ML_KEM_1024, "CT_SIZE", 1568)
+    MLKEM_1024_EK_LEN = getattr(ML_KEM_1024, "EK_SIZE", 1568)                                       MLKEM_1024_CT_LEN = getattr(ML_KEM_1024, "CT_SIZE", 1568)
     MLKEM_1024_SS_LEN = getattr(ML_KEM_1024, "SS_SIZE", 32)
-except Exception as e:
-    print(f"Warning: fips203 ML_KEM_1024 unavailable: {e}")
+except Exception as e:                                                                              print(f"Warning: fips203 ML_KEM_1024 unavailable: {e}")
     ML_KEM_1024 = None
     EncapsulationKey = None
 
@@ -39,8 +36,7 @@ except Exception as e:
     print(f"Warning: cryptography mldsa unavailable: {e}")
     mldsa = None
     MLDSA87_VK_LEN = 2592
-
-
+                                                                                                
 def ml_kem_1024_encaps(ek_bytes: bytes) -> tuple[bytes, bytes]:
     if ML_KEM_1024 is None or EncapsulationKey is None:
         raise RuntimeError("Install `fips203` (`pip install fips203`) and `libfips203.so` for ML-KEM-1024.")
