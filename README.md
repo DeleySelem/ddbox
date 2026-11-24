@@ -88,56 +88,29 @@ DDBox combines post-quantum cryptography (**FIPS 203** and **FIPS 204**), **AES-
 
 ### 2. End-to-End Protocol Flows
 
-#### A. Standard Room Mode (Server-Mediated ML-KEM-1024 Group Key + ML-DSA-87)
+#### A. Standard Mode (ML-KEM-1024 Group Key + ML-DSA-87)
 ```text
-[Browser Client]                                      [Flask-SocketIO Server]
-      |                                                        |
-      |-- 1. Generate ML-KEM-1024 (ek, dk) & ML-DSA-87 (vk, sk) |
-      |-- 2. Socket.IO connect(auth: { ek, vk }) ------------->|
-      |                                                        |-- 3. Validate ek/vk lengths
-      |                                                        |-- 4. Encapsulate: (ct, ss) = ML-KEM-1024.Encaps(ek)
-      |                                                        |-- 5. wrap_key = HKDF-SHA256(ss, info="ddbox-ml-kem-1024-group-key-wrap")
-      |                                                        |-- 6. wrapped = AES-256-GCM(wrap_key, group_key)
-      |<-- 7. emit 'group_key' { ct, iv, ciphertext } ---------|
-      |-- 8. Decapsulate ss = ML-KEM-1024.Decaps(ct, dk)       |
-      |-- 9. Derive wrap_key & unwrap group_key via AES-GCM   |
-      |                                                        |
-      |-- 10. Encrypt msg with AES-256-GCM(group_key) -------->|
-      |-- 11. Sign canonical {room,sender,timestamp,ciphertext}  |
-      |       with ML-DSA-87(sk) ----------------------------->|
-      |                                                        |-- 12. Verify ML-DSA-87(vk, payload, sig)
-      |                                                        |-- 13. Relay ciphertext + signature + vk to room
-      |<-- 14. Receive, verify ML-DSA-87, & AES-GCM decrypt ---|
+Client                          Server
+  |-- 1. Gen KEM-1024 & DSA-87 -->|
+  |-- 2. Connect(ek, vk) -------->|
+  |                               |-- 3. Encaps (ct, ss)
+  |                               |-- 4. HKDF + AES wrap key
+  |<-- 5. group_key (wrapped) ----|
+  |-- 6. Decaps & unwrap key ---->|
+  |-- 7. AES-GCM enc + DSA sign ->|
+  |                               |-- 8. Verify DSA & relay
+  |<-- 9. Verify DSA & decrypt ---|
 
 
-[Room Host Browser]          [Offline / Out-of-Band]          [Recipient Browser(s)]         [Flask-SocketIO Server]
-         |                            |                                |                               |
-         |-- 1. Check "Key Activated"  |                                |                               |
-         |-- 2. Click "Generate Key"   |                                |                               |
-         |      (256-bit / 64-hex)    |                                |                               |
-         |                            |-- 3. Share FULL 64-hex key --->|                               |
-         |                            |      (out-of-band channel)     |                               |
-         |                                                             |-- 4. Join room & paste key -->| (Server has NO
-         |                                                             |-- 5. Click "Apply Key"         |  offline key &
-         |                                                             |                               |  no group_key)
-         |-- 6. AES-256-GCM encrypt with offline key & ML-DSA-87 sign -------------------------------->|
-         |                                                             |<-- 7. Receive ciphertext+sig -| (Server sees
-         |                                                             |-- 8. Verify sig & decrypt      |  only ciphertext
-         |                                                             |      with offline key          |  & ML-DSA-87 sig)
-```
 
-### 3. Key Lifecycle, Controls & Trust Boundaries
-​Group Key Rotation (Standard Mode)
+Host            Offline         Recipient         Server
+  |-- 1. Check & Gen 64-hex ----->|                 |
+  |                 |-- 2. Key -->|                 |
+  |                               |-- 3. Join & apply key
+  |-- 4. AES-GCM enc + DSA sign ------------------->|
+  |                               |<-- 5. Cipher + sig
+  |                               |-- 6. Verify & dec
 
-The server rotates the room group_key every 300 seconds while members are present and redistributes it via ML-KEM-1024 encapsulation (new_group_key). In Offline E2EE Key Mode, server group-key rotation does not supply a decryption key.
-
-​Recipient Key Enforcement (Offline Mode): When Offline E2EE is activated, messages received before applying the full 64-hex key remain locked/queued until the valid key is applied, and sending is blocked until an offline key is set.
-​Replay / Duplicate Protection: Monotonic message IDs (id) and client-side deduplication (seenMessageIds) prevent duplicate message rendering across history syncs and reconnects.
-​What the Server Can vs. Cannot Do:
-​Server can: Route Socket.IO events, enforce rate limits, verify ML-DSA-87 signatures, store/relay ciphertext, and serve /boot and /get_encrypted_page.
-​Server cannot (in Offline E2EE Mode): Decrypt messages without the out-of-band 256-bit key—because the key is generated client-side, never transmitted to Flask/SocketIO, and never stored in server memory or logs.
-
-​Remaining caveats: Software PQ libraries (@noble/post-quantum, fips203, cryptography) are not FIPS 140-3 validated modules; use HTTPS/TLS in front of SESSION_COOKIE_SECURE = True, and verify ML-DSA-87 / offline keys out-of-band.
 
 Contact
 Author / maintainer contact: deleyselem@proton.me.
