@@ -68,7 +68,7 @@ The server listens on [http://0.0.0.0:5000](http://0.0.0.0:5000) ([http://127.0.
 ​Keeping Termux Alive: Android may suspend background Termux sessions. In Termux (outside proot-distro), tap Acquire wake lock in the Termux notification drawer or run termux-wake-lock to prevent background throttling while hosting.
 ​Ephemeral State: Rooms, messages, keys, and rate-limit counters are stored in memory in main.py and reset when the server restarts.
   
-Architecture & Cryptography Overview
+## Architecture & Cryptography Overview
 
 ​Backend: Flask + Flask-SocketIO (async_mode='threading') + cryptography.  
 ​Frontend: Vanilla JavaScript using the browser's Web Crypto API (crypto.subtle).  
