@@ -84,7 +84,7 @@ DDBox combines post-quantum cryptography (**FIPS 203** and **FIPS 204**), **AES-
 | **Message Encryption** | **AES-256-GCM** (96-bit / 12-byte random IV) | Browser (`SubtleCrypto`) | Encrypts chat plaintext client-side before sending ciphertext over Socket.IO. |
 | **Encrypted Page Delivery** | **PBKDF2-HMAC-SHA256** (100,000 iter.) + **AES-256-GCM** | Server (`cryptography`) $\rightarrow$ Browser (`/boot` + `/get_encrypted_page`) | Encrypts rendered `room.html` with a per-room passphrase before client-side decryption in `/boot`. |
 | **Identity Fingerprints** | **SHA-256** (first 16 hex chars) | Browser (`SubtleCrypto.digest`) | Displays short fingerprints for ML-KEM-1024 encapsulation keys and ML-DSA-87 verification keys in the Users drawer. ||
-```
+
 
 ### 2. End-to-End Protocol Flows
 
