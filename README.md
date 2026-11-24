@@ -75,8 +75,10 @@ The server listens on [http://0.0.0.0:5000](http://0.0.0.0:5000) ([http://127.0.
 ​Encrypted Page Delivery: /boot fetches /get_encrypted_page, derives a 256-bit AES-GCM key via PBKDF2-HMAC-SHA256 (100,000 iterations) from the room's page_passphrase and salt, decrypts the rendered room.html in memory, and writes it to the document.
 
 ​Group Key Distribution & Rotation: Each client generates an ephemeral ECDH (P-256) key pair on room entry. The server encrypts the room's 32-byte AES-GCM group key using an ECDH shared secret + HKDF-SHA256 ("group-key-encryption") and rotates the group key every 5 minutes (300 seconds) while active members are present.  
-​Message Encryption & History: Messages are encrypted client-side with AES-GCM (12-byte random IV prepended to ciphertext, base64-encoded). The server assigns monotonic message IDs, stores message objects in memory, supports incremental history sync (request_history with since_id), and exposes /logs/<room> to authenticated room members.  
-​Security Considerations
+​Message Encryption & History: Messages are encrypted client-side with AES-GCM (12-byte random IV prepended to ciphertext, base64-encoded). The server assigns monotonic message IDs, stores message objects in memory, supports incremental history sync (request_history with since_id), and exposes /logs/<room> to authenticated room members.
+
+## ​Security Considerations
+
 ​Server Trust Model: The server generates and holds the room's group_key and page_passphrase in memory. A compromised or malicious server can decrypt messages, log plaintexts, or view /logs/<room>.
 
 ​No Forward Secrecy or Message Signatures: Group keys rotate every 5 minutes rather than per message, and messages are encrypted with a shared group key without per-message sender signatures or out-of-band key verification.  
