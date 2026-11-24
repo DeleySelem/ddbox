@@ -1,0 +1,48 @@
+{% extends 'base.html' %} {% block content %}
+<style>
+    body { font-size: 18px; background: #1a1a1a; color: #c0c0c0; }
+    .content { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; }
+    form.buttons { background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); border: 1px solid #4a5d23; border-radius: 16px; padding: 2rem 2.5rem; max-width: 420px; width: 100%; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+    h3 { font-size: 2rem; color: #9ab87a; text-align: center; letter-spacing: 2px; margin-top: 0; margin-bottom: 1.5rem; font-weight: normal; border-bottom: 1px solid #3f5e1e; padding-bottom: 0.5rem; }
+    label { font-size: 1.2rem; display: block; margin: 0.8rem 0 0.3rem; color: #b0c0a0; }
+    input[type="text"] { width: 100%; padding: 0.8rem 1rem; font-size: 1.2rem; background: rgba(10,20,5,0.7); border: 1px solid #4a5d23; border-radius: 8px; color: #d0d0b0; margin-bottom: 0.8rem; box-sizing: border-box; }
+    input[type="text"]:focus { outline: none; border-color: #9ab87a; box-shadow: 0 0 12px rgba(154,184,122,0.2); }
+    .join { display: flex; gap: 0.6rem; }
+    .join input { flex: 2; }
+    .join button { flex: 1; }
+    button { background: #3f5e1e; border: 1px solid #6a8f4a; color: #e8f0d0; padding: 0.8rem 1rem; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: all 0.2s; font-family: inherit; width: 100%; margin-top: 0.4rem; }
+    button:hover { background: #5a7a3a; box-shadow: 0 0 15px rgba(90,122,58,0.4); }
+    .create-btn { background: #2a4a1a; border-color: #5a7a3a; }
+    .create-btn:hover { background: #3f5e1e; }
+    ul { list-style: none; padding: 0; margin: 0.8rem 0 0; color: #d45a5a; background: rgba(80,20,20,0.6); padding: 0.4rem; border-radius: 4px; border: 1px solid #6a2a2a; font-size: 1rem; }
+    ul li { padding: 0.2rem 0; }
+    @media (max-width: 480px) {
+        form.buttons { padding: 1.5rem; }
+        h3 { font-size: 1.6rem; }
+        input[type="text"], button { font-size: 1rem; padding: 0.6rem 0.8rem; }
+    }
+</style>
+<form method="post" class="buttons">
+    <h3>⏤ DDBox ⏤</h3>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div>
+        <label>Your callsign</label>
+        <input type="text" placeholder="Enter name" name="name" value="{{name}}" required />
+    </div>
+    <div class="join">
+        <input type="text" placeholder="Room code" name="code" value="{{code}}" id="code-input" />
+        <button type="submit" name="join">Join</button>
+    </div>
+    <button type="submit" name="create" class="create-btn">Create Room</button>
+    {% if error %}
+    <ul><li>{{error}}</li></ul>
+    {% endif %}
+</form>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        if (code) document.getElementById('code-input').value = code;
+    });
+</script>
+{% endblock %}
