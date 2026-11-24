@@ -101,7 +101,7 @@ Client                          Server
   |                               |-- 8. Verify DSA & relay
   |<-- 9. Verify DSA & decrypt ---|
 
-
+#### B. Offline E2EE Key Mode (Out-of-Band Key)
 
 Host            Offline         Recipient         Server
   |-- 1. Check & Gen 64-hex ----->|                 |
