@@ -105,7 +105,7 @@ Client                          Server
 
 #### B. Offline E2EE Key Mode (Out-of-Band Key)
 
-```markdown
+```text
 Host            Offline         Recipient         Server
   |-- 1. Check & Gen 64-hex ----->|                 |
   |                 |-- 2. Key -->|                 |
