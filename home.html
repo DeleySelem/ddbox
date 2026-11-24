@@ -1,0 +1,143 @@
+{% extends 'base.html' %} {% block content %}
+<style>
+    html, body { height: 100%; margin:0; overflow:hidden; }
+    body {
+        background: #1a1a1a;
+        color: #c0c0c0;
+        font-family: 'Courier New', monospace;
+        font-size: 18px;
+    }
+    .content {
+        height: 100dvh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+    }
+    .card {
+        background: rgba(0, 0, 0, 0.78);
+        backdrop-filter: blur(6px);
+        border: 1px solid #4a5d23;
+        border-radius: 16px;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+        width: 100%;
+        max-width: 460px;
+        padding: 1.8rem;
+    }
+    .card h2 {
+        margin: 0 0 1.2rem 0;
+        color: #9ab87a;
+        text-shadow: 0 0 8px #2a4a1a;
+        text-align: center;
+        letter-spacing: 2px;
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.4rem;
+        color: #b0c09a;
+        font-size: 0.95rem;
+    }
+    .form-group input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+        background: rgba(10, 20, 5, 0.75);
+        border: 1px solid #4a5d23;
+        padding: 0.7rem 0.9rem;
+        border-radius: 8px;
+        color: #e0e8d0;
+        font-family: inherit;
+        font-size: 1.05rem;
+    }
+    .form-group input[type="text"]:focus {
+        outline: none;
+        border-color: #9ab87a;
+        box-shadow: 0 0 10px rgba(154, 184, 122, 0.25);
+    }
+    .checkbox-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.55rem;
+        margin-bottom: 1.2rem;
+        padding: 0.65rem 0.8rem;
+        border: 1px solid #3f5e1e;
+        border-radius: 8px;
+        background: rgba(20, 35, 12, 0.45);
+        font-size: 0.9rem;
+        color: #c8d8b4;
+        line-height: 1.35;
+    }
+    .checkbox-row input[type="checkbox"] {
+        margin-top: 0.2rem;
+        accent-color: #6a8f4a;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+    .btn-row {
+        display: flex;
+        gap: 0.8rem;
+    }
+    .btn {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 1px solid #6a8f4a;
+        background: #3f5e1e;
+        color: #e8f0d0;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn:hover {
+        background: #5a7a3a;
+        box-shadow: 0 0 14px rgba(90, 122, 58, 0.45);
+    }
+    .btn.secondary {
+        background: rgba(25, 40, 18, 0.8);
+        border-color: #4a5d23;
+    }
+    .error {
+        margin-bottom: 1rem;
+        padding: 0.6rem 0.8rem;
+        border-radius: 8px;
+        border: 1px solid #c04040;
+        background: rgba(110, 20, 20, 0.5);
+        color: #ff9c9c;
+        font-size: 0.92rem;
+    }
+</style>
+
+<div class="content">
+    <div class="card">
+        <h2>DDBOX</h2>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="POST" action="/">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            <div class="form-group">
+                <label for="name">Display Name</label>
+                <input type="text" id="name" name="name" value="{{ name or '' }}" maxlength="30" required autocomplete="off" />
+            </div>
+            <div class="form-group">
+                <label for="code">Room Code (for Join)</label>
+                <input type="text" id="code" name="code" value="{{ code or '' }}" maxlength="20" placeholder="e.g. A1B2C3D4" autocomplete="off" />
+            </div>
+            <label class="checkbox-row" for="offline_e2ee">
+                <input type="checkbox" id="offline_e2ee" name="offline_e2ee" value="1" />
+                <span>
+                    <strong>Require Offline E2EE Key</strong><br />
+                    Host generates &amp; shares the key offline; all recipients must paste it after joining. Server never gets the key.
+                </span>
+            </label>
+            <div class="btn-row">
+                <button type="submit" name="create" value="1" class="btn">Create Room</button>
+                <button type="submit" name="join" value="1" class="btn secondary">Join Room</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
