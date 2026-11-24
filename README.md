@@ -73,6 +73,7 @@ Server Trust Assumption: The server generates and holds group_key and page_passp
 DDBox combines post-quantum cryptography (**FIPS 203** and **FIPS 204**), **AES-256-GCM**, **HKDF / PBKDF2**, and an optional **Offline E2EE Key** mode so that messages remain encrypted on the client and—when offline E2EE is enabled—cannot be decrypted even if the server is compromised.
 
 ### 1. Protocol & Primitive Matrix
+
 ```text
 | Layer / Function | Algorithm / Standard | Where It Runs | Purpose & Scope |
 | :--- | :--- | :--- | :--- |
@@ -88,6 +89,7 @@ DDBox combines post-quantum cryptography (**FIPS 203** and **FIPS 204**), **AES-
 ### 2. End-to-End Protocol Flows
 
 #### A. Standard Mode (ML-KEM-1024 Group Key + ML-DSA-87)
+
 ```text
 Client                          Server
   |-- 1. Gen KEM-1024 & DSA-87 -->|
