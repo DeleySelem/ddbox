@@ -112,8 +112,8 @@ DDBox combines post-quantum cryptography (**FIPS 203** and **FIPS 204**), **AES-
 
 [Room Host Browser]          [Offline / Out-of-Band]          [Recipient Browser(s)]         [Flask-SocketIO Server]
          |                            |                                |                               |
-         |-- 1. Check "Key Activated"   |                                |                               |
-         |-- 2. Click "Generate Key"    |                                |                               |
+         |-- 1. Check "Key Activated"  |                                |                               |
+         |-- 2. Click "Generate Key"   |                                |                               |
          |      (256-bit / 64-hex)    |                                |                               |
          |                            |-- 3. Share FULL 64-hex key --->|                               |
          |                            |      (out-of-band channel)     |                               |
