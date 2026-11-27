@@ -16,7 +16,7 @@ echo -e "${BLUE}==================================================${NC}"
 
 cat <<EOF
 Author: D373Y 5373M
-Version: 1.0.5
+Version: 1.0.6.
 
 Step-by-step instructions:
 1. Search from internet: 'F-droid'
