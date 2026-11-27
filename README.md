@@ -1,66 +1,73 @@
 # DDBox
 
-**DDBox** is a secure, decentralized, end-to-end encrypted (E2EE) communication platform designed for ephemeral, high-security environments for deaddrop -style communication. 
+**DDBox** is a secure, decentralized, end-to-end encrypted (E2EE) communication platform designed for ephemeral, high-security environments and deaddrop-style communication. 
 
 ## 🛡️ Security Architecture & Standards
 
-DDBox is built to withstand modern cryptographic threats, including those posed by quantum computing. It utilizes **Post-Quantum Cryptography (PQC)** alongside classical symmetric encryption, strictly aligning with the **NSA's CNSA 2.0** (Commercial National Security Algorithm Suite) guidance and U.S. Army standards for National Security Systems (NSS).
+DDBox is engineered to withstand modern cryptographic threats, including those posed by quantum computing. It utilizes **Post-Quantum Cryptography (PQC)** alongside classical symmetric encryption, aligning with **NSA CNSA 2.0** and U.S. Army standards for National Security Systems (NSS).
 
 ### Protocol Stack
 - **Asymmetric Key Exchange:** `fips203` (ML-KEM / formerly CRYSTALS-Kyber)
 - **Symmetric Encryption:** AES-256-GCM (256-bit keys)
-- **Data Integrity / Hashing:** **SHA-512** (via `cryptography>=48`)
+- **Data Integrity / Hashing:** **SHA-256** (via `cryptography>=48`)
 
 ### Comparison to U.S. Government Standards
 
 | Feature | DDBox Implementation | NSA / U.S. Army Standard | Compliance / Status |
 | :--- | :--- | :--- | :--- |
-| **PQC Key Encapsulation** | **ML-KEM (FIPS 203)** | **CNSA 2.0** | **Fully Compliant.** The NSA mandates ML-KEM for all National Security Systems (NSS) transitioning to quantum-resistant algorithms by 2030 to prevent "Harvest Now, Decrypt Later" attacks. |
-| **Symmetric Encryption** | **AES-256-GCM** | **AES-256** | **Compliant.** AES-256 is the standard for TOP SECRET information. GCM provides authenticated encryption, preventing tampering. |
-| **Cryptographic Hashing** | **SHA-512** | **SHA-384 or SHA-512** | **Compliant.** CNSA 2.0 mandates SHA-384 or SHA-512 (FIPS 180-4) for hashing. SHA-256 is explicitly disallowed due to insufficient collision resistance for NSS. |
-| **Digital Signatures (PQC)** | **ML-DSA-87 (FIPS 204)** | **ML-DSA-87** | **Compliant.** The NSA approves ML-DSA-87. Pre-hashing for signatures is backed by SHA-512. |
-| **Offline Key Generation** | **256-bit (64-hex) CSPRNG** | **NIST SP 800-90A** | **Compliant.** Keys are generated locally using `openssl rand` (SHA-512 backed), never transmitted over the network. |
-
-> **Note:** DDBox's use of ML-KEM via the `fips203` Python library ensures that even if an adversary records traffic today, they cannot decrypt it with a future quantum computer.
+| **PQC Key Encapsulation** | **ML-KEM (FIPS 203)** | **CNSA 2.0** | **Fully Compliant.** NSA mandates ML-KEM for all National Security Systems by 2030 to prevent "Harvest Now, Decrypt Later" attacks. |
+| **Symmetric Encryption** | **AES-256-GCM** | **AES-256** | **Compliant.** AES-256 is the standard for TOP SECRET information. GCM provides authenticated encryption. |
+| **Cryptographic Hashing** | **SHA-256** | **SHA-384 or SHA-512** | **⚠️ Partial Compliance.** CNSA 2.0 mandates SHA-384/512. SHA-256 is currently used in `main.py` for PBKDF2HMAC and HKDF. |
+| **Digital Signatures (PQC)** | **ML-DSA-87 (FIPS 204)** | **ML-DSA-87** | **Compliant.** The NSA approves ML-DSA-87 for quantum-resistant signatures. |
+| **Offline Key Generation** | **256-bit (64-hex) CSPRNG** | **NIST SP 800-90A** | **Compliant.** Keys are generated locally using `openssl rand`, never transmitted over the network. |
 
 ---
 
 ## 🚀 Automated Installation (Android / Termux)
 
-Because Android's standard environment restricts complex Python builds (specifically the Rust requirements for Post-Quantum libraries), DDBox uses `proot-distro` to run a full Debian Linux environment inside Termux.
+Because Android's standard environment restricts complex Python builds (specifically the Rust requirements for Post-Quantum libraries), DDBox utilizes `proot-distro` to run a full Debian Linux environment inside Termux. 
+
+The repository includes **three automated installation scripts** to make this process seamless.
 
 ### Step 1: Install Termux
 1. Search the internet for **F-Droid**.
 2. Install F-Droid and grant required permissions.
 3. Open F-Droid, search for **Termux**, and install it.
-   > ⚠️ **WARNING:** Do **NOT** use the Google Play Store version of Termux. It is deprecated, broken, and contains surveillance backdoors.
+   > ⚠️ **WARNING:** Do **NOT** use the Google Play Store version of Termux. It is deprecated and contains surveillance backdoors.
 4. Open Termux.
 
-### Step 2: Bootstrap Debian
-Copy and paste the following command into Termux. This updates Termux, installs `proot-distro`, downloads Debian, and logs you into the Debian environment:
+### Step 2: Bootstrap Environment (`autoinstall.sh`)
+Copy and paste the following block into Termux. This will install Git, clone the repository, and run the first autoinstaller to set up Debian.
 
 ```bash
-pkg update -y && pkg upgrade -y && pkg install -y proot-distro
-proot-distro install debian
+pkg update -y && pkg upgrade -y && pkg install -y git proot-distro
+git clone https://github.com/DeleySelem/ddbox
+cd ddbox
+bash autoinstall.sh
+```
+
+Follow the on-screen instructions. Once Debian is installed, log into it:
+
+```bash
 proot-distro login debian
 ```
 
-Step 3: Clone and Install Part 1 (Inside Debian)
+Step 3: System Setup (autoinstall_2.sh)
 
-Once you are logged into Debian (your prompt will change to root@localhost:~#), copy and paste this entire block:
+Now that you are inside Debian (root@localhost:~#), clone the repository again inside the Debian environment and run the second autoinstaller. This installs system build tools, Rust, and ngrok.
 
 ```bash
 apt update && apt install -y git
-git clone https://github.com/deleyselem/ddbox
+git clone https://github.com/DeleySelem/ddbox
 cd ddbox
 bash autoinstall_2.sh
 ```
 
-Note: autoinstall_2.sh will install Rust, build tools, the ngrok binary (ARM64), and prompt you for your ngrok Auth Token (get it from ngrok.com).
+Note: During this step, you will be prompted to paste your ngrok Auth Token. Get it from dashboard.ngrok.com.
 
-Step 4: Finish Setup
+Step 4: Crypto Setup & Launch (autoinstall_3.sh)
 
-After autoinstall_2.sh completes, run the final setup script to compile the cryptography dependencies and launch options:
+Run the final autoinstaller. This script will run the official setup.sh, compile the Post-Quantum dependencies (fips203 and cryptography), and prompt you to launch the server.
 
 ```bash
 bash autoinstall_3.sh
@@ -68,25 +75,19 @@ bash autoinstall_3.sh
 
 Step 5: Generate Offline Keys
 
-Before starting the server, generate your E2EE key. Run:
+Before or during the launch, you must generate your E2EE key. Open a new Termux session (or exit the server temporarily) and run:
 
 ```bash
 bash gayken.sh
 ```
 
-Copy the printed 64-character hex key and save it securely. You will need to paste this into the DDBox web interface.
+Copy the printed 64-character hex key and save it securely. You will paste this into the DDBox web interface to decrypt the room.
 
-Step 6: Launch the Server
-
-Start the Flask server and ngrok tunnel:
-
-```bash
-python3 main.py | ngrok http 5000
-```
+Step 6: Connect
 
 1. Wait for ngrok to output a URL ending in https://xxxx-xxx-xxx-xxx-xx.ngrok-free.app.
 2. If the ngrok warning page appears, click "Visit Site" (this only happens on the free tier).
-3. Paste your Offline Key into the UI to decrypt the room.
+3. Paste your Offline Key into the DDBox UI.
 4. Keep both the Termux terminal and your browser open to prevent connection drops.
 
 ---
@@ -96,7 +97,7 @@ python3 main.py | ngrok http 5000
 1. Ensure you have Python 3.10+, Rust, and Cargo installed.
 2. Clone the repository:
    ```bash
-   git clone https://github.com/deleyselem/ddbox
+   git clone https://github.com/DeleySelem/ddbox
    cd ddbox
    ```
 3. Run the setup:
@@ -120,4 +121,4 @@ python3 main.py | ngrok http 5000
 1. Never share your Offline Key over the same channel you are using to communicate.
 2. Keep the Termux terminal open while the server is running. Android may kill background processes to save battery.
 3. Do not use sudo inside the proot-distro Debian environment. You are already the root user, and sudo is not installed by default.
-4. Use ML-KEM rotation for long-lived sessions if you are transmitting highly sensitive data.
+4. Audit your traffic: Free ngrok tunnels show a warning page. Do not use free ngrok for operational deployments where stealth is required.
