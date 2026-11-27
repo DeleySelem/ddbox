@@ -4,11 +4,11 @@
 # Stages (all in this one file):
 #   Termux  (no args) : bootstrap Debian + run full install via proot-distro + launch
 #   Debian  -2        : system deps + Rust + Python + ngrok + token  → chains to -3
-#   Debian  -3        : setup.sh logic (pip, templates, verify) + key generation
+#   Debian  -3        : setup.sh logic (apt-first, pip-fallback) + key generation
 #   Debian  -key      : regenerate offline E2EE key only
 #   Debian  -launch   : start DDBox (python3 main.py | ./ngrok http 5000)
 #
-# Author: D373Y 5373M  |  Version 1.2.0
+# Author: D373Y 5373M  |  Version 1.2.2
 set -uo pipefail
 
 # ─────────────────────────────────────────────────────────────
@@ -64,22 +64,54 @@ step() {
 }
 
 # ─────────────────────────────────────────────────────────────
-#  Host detection — /etc/debian_version only exists inside Debian
+#  Host detection
 # ─────────────────────────────────────────────────────────────
 is_termux_host() {
     [ ! -f /etc/debian_version ] && command -v pkg >/dev/null 2>&1
 }
 
 # ─────────────────────────────────────────────────────────────
-#  Debian stage -2 : system deps + ngrok
+#  libfips203 locator
+# ─────────────────────────────────────────────────────────────
+ensure_fips203_library() {
+    local lib=""
+    if command -v ldconfig >/dev/null 2>&1; then
+        lib=$(ldconfig -p 2>/dev/null | awk '/libfips203\.so/ {print $NF; exit}')
+    fi
+    if [ -z "$lib" ]; then
+        lib=$(find /usr/lib /lib -name 'libfips203.so*' 2>/dev/null | head -n1)
+    fi
+    if [ -z "$lib" ]; then
+        err "libfips203.so not found on the system"
+        return 1
+    fi
+    export FIPS203_PYTHON_TESTING_LIBRARY="$lib"
+    ok "FIPS203_PYTHON_TESTING_LIBRARY=$lib"
+    mkdir -p /etc/profile.d
+    printf 'export FIPS203_PYTHON_TESTING_LIBRARY="%s"\n' "$lib" \
+        > /etc/profile.d/ddbox-fips203.sh
+    chmod 644 /etc/profile.d/ddbox-fips203.sh
+}
+
+# ─────────────────────────────────────────────────────────────
+#  Does the installed cryptography already provide mldsa?
+# ─────────────────────────────────────────────────────────────
+cryptography_has_mldsa() {
+    python3 - <<'PY' >/dev/null 2>&1
+from cryptography.hazmat.primitives.asymmetric import mldsa  # noqa: F401
+PY
+}
+
+# ─────────────────────────────────────────────────────────────
+#  Debian stage -2 : apt-first deps + ngrok + token
 # ─────────────────────────────────────────────────────────────
 run_debian_deps() {
     export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a
     APT_OPTS=(-y -o "Dpkg::Options::=--force-confold" -o "Dpkg::Options::=--force-confdef")
-    TOTAL_STEPS=4; CURRENT_STEP=0
+    TOTAL_STEPS=5; CURRENT_STEP=0
     echo
     banner "DDBox  ──  Debian install (1 of 2)"
-    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.0${RST}\n"
+    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.2${RST}\n"
 
     if [ ! -f install.sh ]; then
         err "install.sh not found in $(pwd) — run from /root/ddbox."
@@ -96,6 +128,35 @@ run_debian_deps() {
         rustc cargo python3 python3-pip python3-venv \
         || { err "APT install failed"; exit 1; }
     ok "System packages installed"
+
+    step "Installing crypto packages via APT"
+    # Native libfips203 (required by the pip fips203 wrapper):
+    if apt-get install "${APT_OPTS[@]}" --no-install-recommends \
+        libfips203-0 libfips203-dev; then
+        ok "libfips203-0 + libfips203-dev"
+    else
+        warn "libfips203 apt packages not available — stage -3 will need FIPS203_PYTHON_TESTING_LIBRARY manually"
+    fi
+
+    # Python cryptography from apt (may be older than 48):
+    if apt-get install "${APT_OPTS[@]}" --no-install-recommends \
+        python3-cryptography; then
+        local v
+        v=$(python3 -c 'import cryptography; print(cryptography.__version__)' 2>/dev/null || echo "unknown")
+        ok "python3-cryptography (apt) → $v"
+        if ! cryptography_has_mldsa; then
+            warn "apt cryptography $v lacks mldsa — stage -3 will pip-upgrade to >=48"
+        fi
+    else
+        warn "python3-cryptography not available in apt — stage -3 will pip-install"
+    fi
+
+    # Python fips203 wrapper — usually NOT in Debian repos; non-fatal:
+    if apt-get install "${APT_OPTS[@]}" --no-install-recommends python3-fips203 2>/dev/null; then
+        ok "python3-fips203 (apt)"
+    else
+        info "python3-fips203 not in apt — stage -3 will pip-install"
+    fi
 
     step "Installing ngrok (from ddbox folder)"
     if [ ! -x ./ngrok ]; then
@@ -128,15 +189,14 @@ run_debian_deps() {
 }
 
 # ─────────────────────────────────────────────────────────────
-#  Debian stage -3 : setup.sh logic + key generation
-#  (port of setup.sh: python, pip, eventlet, packages, templates, verify)
+#  Debian stage -3 : setup.sh logic (apt-first, pip fallback)
 # ─────────────────────────────────────────────────────────────
 run_debian_setup() {
     export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a
     TOTAL_STEPS=5; CURRENT_STEP=0
     echo
     banner "DDBox  ──  Debian install (2 of 2)"
-    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.0${RST}\n"
+    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.2${RST}\n"
 
     if [ ! -f main.py ]; then
         err "main.py not found in $(pwd) — run from /root/ddbox."
@@ -156,10 +216,9 @@ run_debian_setup() {
     if python3 -c "import eventlet" 2>/dev/null; then
         python3 -m pip uninstall -y --quiet eventlet 2>/dev/null \
             || python3 -m pip uninstall -y --quiet --break-system-packages eventlet 2>/dev/null \
-            || warn "could not uninstall eventlet, manual cleanup may be needed"
+            || warn "could not uninstall eventlet"
         if python3 -c "import eventlet" 2>/dev/null; then
-            err "eventlet still importable — remove it manually before launching"
-            exit 1
+            err "eventlet still importable — remove manually"; exit 1
         else
             ok "eventlet removed"
         fi
@@ -167,20 +226,36 @@ run_debian_setup() {
         ok "eventlet not present"
     fi
 
-    step "Installing Python packages (flask, flask-socketio, cryptography>=48, fips203)"
+    step "Installing Python packages (apt-first, pip only when needed)"
     pip_install_one() {
         local pkg="$1"
         python3 -m pip install --quiet --upgrade "$pkg" 2>/dev/null \
             || python3 -m pip install --quiet --upgrade --break-system-packages "$pkg" 2>/dev/null \
             || python3 -m pip install --quiet --upgrade --break-system-packages --force-reinstall "$pkg" 2>/dev/null
     }
-    for pkg in "flask" "flask-socketio" "cryptography>=48" "fips203"; do
-        if pip_install_one "$pkg"; then
-            ok "$pkg"
-        else
-            err "$pkg — installation failed"
-        fi
+
+    # flask / flask-socketio — only in pip for Debian, not worth apt hunting
+    for pkg in "flask" "flask-socketio"; do
+        pip_install_one "$pkg" && ok "$pkg" || err "$pkg — installation failed"
     done
+
+    # cryptography: apt version was tried in -2. If it lacks mldsa, pip-upgrade.
+    if cryptography_has_mldsa; then
+        local v
+        v=$(python3 -c 'import cryptography; print(cryptography.__version__)' 2>/dev/null || echo "unknown")
+        ok "cryptography $v (apt) already provides mldsa — skipping pip"
+    else
+        info "cryptography from apt lacks mldsa — pip-upgrading to >=48"
+        pip_install_one "cryptography>=48" && ok "cryptography>=48 (pip)" || err "cryptography>=48 — pip failed"
+    fi
+
+    # fips203 Python wrapper — not in Debian apt; pip only.
+    if python3 -c "import fips203" 2>/dev/null; then
+        ok "fips203 (apt) already present — skipping pip"
+    else
+        info "fips203 Python wrapper not in apt — pip-installing"
+        pip_install_one "fips203" && ok "fips203 (pip)" || err "fips203 — pip failed"
+    fi
 
     step "Organizing templates"
     mkdir -p templates
@@ -195,6 +270,7 @@ run_debian_setup() {
     [ "$moved" -eq 0 ] && ok "templates/ already organized"
 
     step "Verifying runtime imports"
+    ensure_fips203_library || true
     if python3 - <<'PY'
 import sys
 missing = []
@@ -210,7 +286,7 @@ try:
 except ImportError: pass
 PY
     then ok "All runtime imports resolve"
-    else err "Verification failed — cryptography>=48 + libfips203.so required"; exit 1
+    else err "Verification failed — check cryptography>=48 and libfips203.so"; exit 1
     fi
 
     echo
@@ -224,8 +300,7 @@ PY
 }
 
 # ─────────────────────────────────────────────────────────────
-#  Debian stage -key : standalone offline key regeneration
-#  (port of gayken.sh)
+#  Debian stage -key
 # ─────────────────────────────────────────────────────────────
 generate_key_internal() {
     command -v python3 >/dev/null 2>&1 || { err "python3 missing"; return 1; }
@@ -245,18 +320,19 @@ run_debian_key() {
     TOTAL_STEPS=1; CURRENT_STEP=0
     echo
     banner "DDBox  ──  offline E2EE key generator"
-    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.0${RST}\n"
+    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.2${RST}\n"
     step "Generating 256-bit key"
     generate_key_internal
 }
 
 # ─────────────────────────────────────────────────────────────
-#  Debian stage -launch : start the app
+#  Debian stage -launch
 # ─────────────────────────────────────────────────────────────
 run_debian_launch() {
     cd /root/ddbox 2>/dev/null || { err "/root/ddbox not found"; exit 1; }
     [ -x ./ngrok ] || { err "ngrok not found in $(pwd) — run install.sh -2 first"; exit 1; }
     [ -f main.py ] || { err "main.py not found in $(pwd)"; exit 1; }
+    ensure_fips203_library || warn "libfips203 not found — main.py may fail to import fips203"
     echo
     banner "DDBox  ──  launching"
     printf "  ${C_DIM}Ctrl-C to stop. Keep this Termux session open.${RST}\n\n"
@@ -270,7 +346,7 @@ run_termux() {
     TOTAL_STEPS=6; CURRENT_STEP=0
     echo
     banner "DDBox  ──  autoinstallation wizard (Termux)"
-    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.0${RST}\n"
+    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.2${RST}\n"
 
     step "Updating Termux packages"
     pkg update -y && pkg upgrade -y || warn "pkg update/upgrade reported issues"
@@ -291,8 +367,6 @@ run_termux() {
     echo
     info "Running: proot-distro login debian -- bash -c \"... install.sh -2\""
     echo
-    # Clone + run stage -2 inside Debian; -2 chains to -3; both run inside
-    # the same proot-distro session. Nothing runs in Termux.
     if ! proot-distro login debian -- bash -c \
         "cd /root && rm -rf ddbox && apt update && apt install -y git && git clone https://github.com/DeleySelem/ddbox && cd ddbox && bash install.sh -2"; then
         err "Debian-side install failed"
@@ -304,7 +378,6 @@ run_termux() {
     cat > "$DD" <<'EOF'
 #!/data/data/com.termux/files/usr/bin/bash
 # ddbox — launch DDBox inside proot-distro Debian.
-# Never runs the program in Termux; uses `install.sh -launch` inside Debian.
 set -e
 exec proot-distro login debian -- bash -c 'cd /root/ddbox && bash install.sh -launch'
 EOF
@@ -325,8 +398,6 @@ EOF
     info "Logging into Debian and starting DDBox..."
     sleep 1
 
-    # Final action: actually login to Debian and launch the app there.
-    # Never invokes python3 / ngrok in Termux.
     exec proot-distro login debian -- bash -c 'cd /root/ddbox && bash install.sh -launch'
 }
 
@@ -340,7 +411,6 @@ if is_termux_host; then
         run_termux
     else
         err "install.sh $ARG must be run INSIDE Debian, not in Termux."
-        err "From Termux, run install.sh with no arguments."
         exit 1
     fi
 else
@@ -356,7 +426,6 @@ else
             ;;
         *)
             err "Unknown option: $ARG"
-            err "Valid: -2 | -3 | -key | -launch (inside Debian)"
             exit 1
             ;;
     esac
