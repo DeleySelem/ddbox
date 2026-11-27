@@ -1,5 +1,3 @@
-
-```markdown
 # DDBox 
 
 **DDBox** is a secure, decentralized, end-to-end encrypted (E2EE) communication platform designed for ephemeral, high-security environments for "deaddrop" communication. 
