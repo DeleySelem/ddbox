@@ -59,5 +59,5 @@ Once your prompt changes to ${RED}root@localhost:~#${NC}, run this block:
 
 EOF
 echo "DDBox --- Autoinstallation continues..."
-echo "
+echo ""
 proot-distro login debian -- bash -c "apt update && apt install -y git && git clone https://github.com/DeleySelem/ddbox && cd ddbox && bash autoinstall_2.sh"
