@@ -147,7 +147,7 @@ echo
 heat "         D D B o x --- s e t u p"
 echo
 echo "Author: D373Y 5373M"
-echo "Version: v1.0.4"
+echo "Version: 1.0.6."
 printf "  ${C_DIM}post-quantum dead-drop chat environment bootstrap${RST}\n"
 
 # -------------------- 1. Python & Build Prerequisites --------------------
