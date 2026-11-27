@@ -37,7 +37,7 @@ The repository includes **three automated installation scripts** to make this pr
 4. Open Termux.
 
 ### Step 2: Bootstrap Environment (`autoinstall_1.sh`)
-Copy and paste the following block into Termux. This will install Git, clone the repository, and run the three autoinstallers.
+Copy and paste the following block into Termux. This will install Git, clone the repository, and run the autoinstallers.
 
 ```bash
 pkg update -y && pkg upgrade -y && pkg install -y git proot-distro
@@ -46,9 +46,9 @@ cd ddbox
 bash autoinstall_1.sh
 ```
 
-This will create 'ddbox' folder in Termux terminal from which it only runs autoinstaller_1.sh to install proot-distro debian, login and clone the working ddbox folder and dependencies inside the Debian. You can delete the ddbox folder from Termux files after installatiln is done.
+This will create 'ddbox' folder in Termux terminal from which it only runs autoinstaller_1.sh to install proot-distro debian, login debian and clone the working ddbox folder and dependencies inside the Debian. You can delete the ddbox folder from Termux files after installatiln is done.
 
-### If autoinstall fails
+### If autoinstall fails (it currently does!)
 
 Follow the on-screen instructions. Once Debian is installed, log into it:
 
