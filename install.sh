@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
-# install.sh — DDBox unified installer
-#   Termux (no arg) : bootstrap proot-distro Debian + install `ddbox` launcher
-#   Debian  -2      : system deps, ngrok, ngrok token → hands off to -3
-#   Debian  -3      : run setup.sh, verify crypto, generate offline key
+# install.sh — unified DDBox installer
 #
-# Author: D373Y 5373M  |  Version 1.1.0
+# Stages (all in this one file):
+#   Termux  (no args) : bootstrap Debian + run full install via proot-distro + launch
+#   Debian  -2        : system deps + Rust + Python + ngrok + token  → chains to -3
+#   Debian  -3        : setup.sh logic (pip, templates, verify) + key generation
+#   Debian  -key      : regenerate offline E2EE key only
+#   Debian  -launch   : start DDBox (python3 main.py | ./ngrok http 5000)
+#
+# Author: D373Y 5373M  |  Version 1.2.0
 set -uo pipefail
 
 # ─────────────────────────────────────────────────────────────
@@ -24,7 +28,7 @@ warn() { printf "  ${C_RED}[!]${RST}  ${C_LGRAY}%s${RST}\n" "$*"; }
 err()  { printf "  ${C_RED}[X]${RST}  ${C_RED}%s${RST}\n" "$*"; }
 
 # ─────────────────────────────────────────────────────────────
-#  Rainbow gradient (setup.sh style) — used for all titles
+#  Rainbow gradient titles (setup.sh style)
 # ─────────────────────────────────────────────────────────────
 heat() {
   awk -v text="$1" -v stops="0;120;255 0;220;220 255;220;0 255;60;60" '
@@ -60,75 +64,25 @@ step() {
 }
 
 # ─────────────────────────────────────────────────────────────
-#  Termux side
+#  Host detection — /etc/debian_version only exists inside Debian
 # ─────────────────────────────────────────────────────────────
-run_termux() {
-    TOTAL_STEPS=6; CURRENT_STEP=0
-    echo
-    banner "D D B o x --- i n s t a l l"
-    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.1.0${RST}\n"
-
-    step "Updating Termux packages"
-    pkg update -y && pkg upgrade -y || warn "pkg update/upgrade reported issues"
-
-    step "Installing proot-distro"
-    pkg install -y proot-distro || { err "proot-distro install failed"; exit 1; }
-
-    step "Checking Debian rootfs"
-    if proot-distro login debian -- true >/dev/null 2>&1; then
-        ok "Debian already installed — proceeding"
-    else
-        info "Installing Debian rootfs (this can take a while)..."
-        proot-distro install debian || { err "Debian install failed"; exit 1; }
-        ok "Debian installed"
-    fi
-
-    step "Installing DDBox inside Debian"
-    echo
-    info "Entering Debian to clone repo and run install.sh -2..."
-    echo
-    # Clone repo inside Debian and run stage 2.
-    # `rm -rf /root/ddbox` keeps this command idempotent on re-runs
-    # (otherwise `git clone` fails when the directory already exists).
-    if ! proot-distro login debian -- bash -c \
-        "cd /root && rm -rf ddbox && apt update && apt install -y git && git clone https://github.com/DeleySelem/ddbox && cd ddbox && bash install.sh -2"; then
-        err "Debian-side install failed"
-        exit 1
-    fi
-
-    step "Creating systemwide 'ddbox' launcher"
-    local DD="${PREFIX:-/data/data/com.termux/files/usr}/bin/ddbox"
-    cat > "$DD" <<'EOF'
-#!/data/data/com.termux/files/usr/bin/bash
-# ddbox — launch DDBox inside proot-distro Debian (Python backend + ngrok tunnel)
-exec proot-distro login debian -- bash -c 'cd /root/ddbox && python3 main.py | ./ngrok http 5000'
-EOF
-    chmod +x "$DD"
-    ok "Installed launcher: $DD"
-
-    step "Verifying launcher"
-    if [ -x "$DD" ]; then ok "ddbox command ready"; else err "launcher missing"; exit 1; fi
-
-    echo
-    banner "D D B o x --- i n s t a l l  c o m p l e t e"
-    printf "  ${C_LGRAY}Launch from anywhere:${RST}  ${C_WHITE}ddbox${RST}\n"
-    printf "  ${C_DIM}First launch starts python + ngrok inside Debian.${RST}\n"
-    echo
+is_termux_host() {
+    [ ! -f /etc/debian_version ] && command -v pkg >/dev/null 2>&1
 }
 
 # ─────────────────────────────────────────────────────────────
-#  Debian stage 2 — system deps + ngrok
+#  Debian stage -2 : system deps + ngrok
 # ─────────────────────────────────────────────────────────────
-run_debian_stage2() {
+run_debian_deps() {
     export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a
     APT_OPTS=(-y -o "Dpkg::Options::=--force-confold" -o "Dpkg::Options::=--force-confdef")
     TOTAL_STEPS=4; CURRENT_STEP=0
     echo
-    banner "D D B o x --- d e b i a n  i n s t a l l"
-    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.1.0${RST}\n"
+    banner "DDBox  ──  Debian install (1 of 2)"
+    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.0${RST}\n"
 
-    if [ ! -f setup.sh ]; then
-        err "setup.sh not found in $(pwd) — run this from /root/ddbox."
+    if [ ! -f install.sh ]; then
+        err "install.sh not found in $(pwd) — run from /root/ddbox."
         exit 1
     fi
 
@@ -139,7 +93,7 @@ run_debian_stage2() {
     apt-get install "${APT_OPTS[@]}" --no-install-recommends \
         git curl unzip wget ca-certificates \
         build-essential libssl-dev libffi-dev \
-        rustc cargo python3-pip python3-venv \
+        rustc cargo python3 python3-pip python3-venv \
         || { err "APT install failed"; exit 1; }
     ok "System packages installed"
 
@@ -174,69 +128,235 @@ run_debian_stage2() {
 }
 
 # ─────────────────────────────────────────────────────────────
-#  Debian stage 3 — setup.sh + verify
+#  Debian stage -3 : setup.sh logic + key generation
+#  (port of setup.sh: python, pip, eventlet, packages, templates, verify)
 # ─────────────────────────────────────────────────────────────
-run_debian_stage3() {
+run_debian_setup() {
     export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a
-    TOTAL_STEPS=3; CURRENT_STEP=0
+    TOTAL_STEPS=5; CURRENT_STEP=0
     echo
-    banner "D D B o x --- d e b i a n  i n s t a l l (3 of 3)"
-    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.1.0${RST}\n"
+    banner "DDBox  ──  Debian install (2 of 2)"
+    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.0${RST}\n"
 
-    if [ ! -f setup.sh ]; then
-        err "setup.sh not found in $(pwd) — run this from /root/ddbox."
+    if [ ! -f main.py ]; then
+        err "main.py not found in $(pwd) — run from /root/ddbox."
         exit 1
     fi
 
-    step "Running setup.sh (pip: cryptography>=48, fips203)"
-    bash setup.sh || { err "setup.sh failed"; exit 1; }
+    step "Verifying Python & pip"
+    command -v python3 >/dev/null 2>&1 || { err "python3 missing"; exit 1; }
+    ok "python3 → $(python3 --version 2>&1)"
+    if ! python3 -m pip --version >/dev/null 2>&1; then
+        python3 -m ensurepip --upgrade >/dev/null 2>&1 || true
+    fi
+    python3 -m pip --version >/dev/null 2>&1 || { err "pip missing"; exit 1; }
+    ok "pip → $(python3 -m pip --version 2>&1 | head -n1)"
+
+    step "Retiring eventlet (retired upstream)"
+    if python3 -c "import eventlet" 2>/dev/null; then
+        python3 -m pip uninstall -y --quiet eventlet 2>/dev/null \
+            || python3 -m pip uninstall -y --quiet --break-system-packages eventlet 2>/dev/null \
+            || warn "could not uninstall eventlet, manual cleanup may be needed"
+        if python3 -c "import eventlet" 2>/dev/null; then
+            err "eventlet still importable — remove it manually before launching"
+            exit 1
+        else
+            ok "eventlet removed"
+        fi
+    else
+        ok "eventlet not present"
+    fi
+
+    step "Installing Python packages (flask, flask-socketio, cryptography>=48, fips203)"
+    pip_install_one() {
+        local pkg="$1"
+        python3 -m pip install --quiet --upgrade "$pkg" 2>/dev/null \
+            || python3 -m pip install --quiet --upgrade --break-system-packages "$pkg" 2>/dev/null \
+            || python3 -m pip install --quiet --upgrade --break-system-packages --force-reinstall "$pkg" 2>/dev/null
+    }
+    for pkg in "flask" "flask-socketio" "cryptography>=48" "fips203"; do
+        if pip_install_one "$pkg"; then
+            ok "$pkg"
+        else
+            err "$pkg — installation failed"
+        fi
+    done
+
+    step "Organizing templates"
+    mkdir -p templates
+    local moved=0
+    shopt -s nullglob
+    for f in *.html; do
+        if [ ! -e "templates/$f" ]; then
+            mv -- "$f" "templates/$f" && { ok "moved $f → templates/$f"; moved=$((moved + 1)); }
+        fi
+    done
+    shopt -u nullglob 2>/dev/null || true
+    [ "$moved" -eq 0 ] && ok "templates/ already organized"
 
     step "Verifying runtime imports"
     if python3 - <<'PY'
 import sys
+missing = []
 for m in ("flask", "flask_socketio", "cryptography"):
     try: __import__(m)
-    except ImportError: print("missing:", m); sys.exit(1)
+    except ImportError: missing.append(m)
+if missing:
+    print("missing:", ", ".join(missing)); sys.exit(1)
 from cryptography.hazmat.primitives.asymmetric import mldsa  # noqa: F401
 import fips203  # noqa: F401
+try:
+    __import__("eventlet"); print("eventlet still installed"); sys.exit(1)
+except ImportError: pass
 PY
     then ok "All runtime imports resolve"
-    else err "Runtime import verification failed"; exit 1
+    else err "Verification failed — cryptography>=48 + libfips203.so required"; exit 1
     fi
 
-    step "Generating offline E2EE key"
-    if [ -f gayken.sh ]; then
-        bash gayken.sh || warn "gayken.sh reported issues"
+    echo
+    info "Generating offline E2EE key..."
+    generate_key_internal
+
+    echo
+    banner "Debian install complete"
+    printf "  ${C_DIM}Returning to Termux; the wizard will launch DDBox there.${RST}\n"
+    echo
+}
+
+# ─────────────────────────────────────────────────────────────
+#  Debian stage -key : standalone offline key regeneration
+#  (port of gayken.sh)
+# ─────────────────────────────────────────────────────────────
+generate_key_internal() {
+    command -v python3 >/dev/null 2>&1 || { err "python3 missing"; return 1; }
+    local key
+    key=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+    if [ "${#key}" -ne 64 ]; then
+        err "generated key is not 64 hex characters"
+        return 1
+    fi
+    printf "  ${C_GREEN}[+] 256-bit (64-hex) key:${RST}\n\n"
+    printf "    ${C_WHITE}${key}${RST}\n\n"
+    printf "  ${C_DIM}Paste this into the DDBox web UI's Offline E2EE key prompt.${RST}\n"
+    printf "  ${C_DIM}Share with recipients out-of-band only.${RST}\n"
+}
+
+run_debian_key() {
+    TOTAL_STEPS=1; CURRENT_STEP=0
+    echo
+    banner "DDBox  ──  offline E2EE key generator"
+    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.0${RST}\n"
+    step "Generating 256-bit key"
+    generate_key_internal
+}
+
+# ─────────────────────────────────────────────────────────────
+#  Debian stage -launch : start the app
+# ─────────────────────────────────────────────────────────────
+run_debian_launch() {
+    cd /root/ddbox 2>/dev/null || { err "/root/ddbox not found"; exit 1; }
+    [ -x ./ngrok ] || { err "ngrok not found in $(pwd) — run install.sh -2 first"; exit 1; }
+    [ -f main.py ] || { err "main.py not found in $(pwd)"; exit 1; }
+    echo
+    banner "DDBox  ──  launching"
+    printf "  ${C_DIM}Ctrl-C to stop. Keep this Termux session open.${RST}\n\n"
+    exec bash -c 'python3 main.py | ./ngrok http 5000'
+}
+
+# ─────────────────────────────────────────────────────────────
+#  Termux side — every Debian action goes through proot-distro
+# ─────────────────────────────────────────────────────────────
+run_termux() {
+    TOTAL_STEPS=6; CURRENT_STEP=0
+    echo
+    banner "DDBox  ──  autoinstallation wizard (Termux)"
+    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.2.0${RST}\n"
+
+    step "Updating Termux packages"
+    pkg update -y && pkg upgrade -y || warn "pkg update/upgrade reported issues"
+
+    step "Installing proot-distro"
+    pkg install -y proot-distro || { err "proot-distro install failed"; exit 1; }
+
+    step "Checking Debian rootfs"
+    if proot-distro login debian -- true >/dev/null 2>&1; then
+        ok "Debian already installed — proceeding"
     else
-        warn "gayken.sh not found — generate key from DDBox UI later"
+        info "Installing Debian rootfs (this can take a while)..."
+        proot-distro install debian || { err "Debian install failed"; exit 1; }
+        ok "Debian installed"
+    fi
+
+    step "Installing DDBox inside Debian (deps + setup + key)"
+    echo
+    info "Running: proot-distro login debian -- bash -c \"... install.sh -2\""
+    echo
+    # Clone + run stage -2 inside Debian; -2 chains to -3; both run inside
+    # the same proot-distro session. Nothing runs in Termux.
+    if ! proot-distro login debian -- bash -c \
+        "cd /root && rm -rf ddbox && apt update && apt install -y git && git clone https://github.com/DeleySelem/ddbox && cd ddbox && bash install.sh -2"; then
+        err "Debian-side install failed"
+        exit 1
+    fi
+
+    step "Creating 'ddbox' launcher"
+    local DD="${PREFIX:-/data/data/com.termux/files/usr}/bin/ddbox"
+    cat > "$DD" <<'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+# ddbox — launch DDBox inside proot-distro Debian.
+# Never runs the program in Termux; uses `install.sh -launch` inside Debian.
+set -e
+exec proot-distro login debian -- bash -c 'cd /root/ddbox && bash install.sh -launch'
+EOF
+    chmod +x "$DD"
+    ok "Launcher installed: $DD"
+
+    step "Verifying launcher"
+    if [ -x "$DD" ]; then
+        ok "ddbox command ready"
+    else
+        err "launcher missing"; exit 1
     fi
 
     echo
-    banner "D e b i a n  i n s t a l l  c o m p l e t e"
-    printf "  ${C_DIM}Exit Debian, then run '${RST}${C_WHITE}ddbox${RST}${C_DIM}' from Termux to launch.${RST}\n"
+    banner "DDBox installation complete"
+    printf "  ${C_LGRAY}Launch from anywhere:${RST}  ${C_WHITE}ddbox${RST}\n"
     echo
+    info "Logging into Debian and starting DDBox..."
+    sleep 1
+
+    # Final action: actually login to Debian and launch the app there.
+    # Never invokes python3 / ngrok in Termux.
+    exec proot-distro login debian -- bash -c 'cd /root/ddbox && bash install.sh -launch'
 }
 
 # ─────────────────────────────────────────────────────────────
 #  Dispatch
 # ─────────────────────────────────────────────────────────────
 ARG="${1:-}"
-if [ -z "$ARG" ]; then
-    if command -v pkg >/dev/null 2>&1 && [ -d /data/data/com.termux ]; then
+
+if is_termux_host; then
+    if [ -z "$ARG" ]; then
         run_termux
     else
-        err "install.sh without arguments is Termux-only."
-        err "Inside Debian, use: bash install.sh -2   (or -3 to resume)"
+        err "install.sh $ARG must be run INSIDE Debian, not in Termux."
+        err "From Termux, run install.sh with no arguments."
         exit 1
     fi
 else
     case "$ARG" in
-        -2) run_debian_stage2 ;;
-        -3) run_debian_stage3 ;;
-        *)  err "Unknown option: $ARG"
-            err "Usage: install.sh          (Termux bootstrap)"
-            err "       install.sh -2       (Debian deps + ngrok)"
-            err "       install.sh -3       (Debian setup.sh + verify)"
+        -2)      run_debian_deps ;;
+        -3)      run_debian_setup ;;
+        -key)    run_debian_key ;;
+        -launch) run_debian_launch ;;
+        "")
+            err "install.sh (no arg) is Termux-only."
+            err "Inside Debian use: install.sh -2 | -3 | -key | -launch"
+            exit 1
+            ;;
+        *)
+            err "Unknown option: $ARG"
+            err "Valid: -2 | -3 | -key | -launch (inside Debian)"
             exit 1
             ;;
     esac
