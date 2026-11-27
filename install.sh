@@ -3,7 +3,7 @@
 #   Termux mode   : bootstraps proot-distro Debian + installs `ddbox` launcher
 #   Debian mode   : installs build tools, ngrok, DDBox deps, verifies runtime
 #
-# Author: D373Y 5373M  |  Version 1.0.9
+# Author: D373Y 5373M  |  Version 1.0.10
 set -uo pipefail
 
 # ─────────────────────────────────────────────────────────────
@@ -57,18 +57,8 @@ heat() {
     }'
 }
 
-# Rainbow banner title (used for the header block)
-banner() {
-    local text="$1"
-    printf '  '
-    heat "$text"
-}
-
-# Step title with rainbow prefix — used as each step's heading
-step_title() {
-    printf '\n  '
-    heat "▶ $1"
-}
+banner()     { printf '  '; heat "$1"; }
+step_title() { printf '\n  '; heat "▶ $1"; }
 
 # ─────────────────────────────────────────────────────────────
 #  Rainbow progress bar (anchored to bottom line)
@@ -103,20 +93,31 @@ _term_size() {
     TERM_LINES=$(tput lines 2>/dev/null || echo 24)
     TERM_COLS=$(tput cols 2>/dev/null || echo 80)
     [ -z "$TERM_LINES" ] && TERM_LINES=24
-    [ -z "$TERM_COLS" ] && TERM_COLS=80
+    [ -z "$TERM_COLS" ]  && TERM_COLS=80
 }
 
 progress_bar() {
-    local pct=$1 msg="${2:-}"
+    local pct="${1:-0}" msg="${2:-}"
+
     if [ "$BAR_ACTIVE" -eq 0 ]; then
         printf '  [%3d%%] %s\n' "$pct" "$msg"
         return
     fi
+
     tput sc 2>/dev/null || true
     tput cup $((TERM_LINES - 1)) 0 2>/dev/null || true
     tput el 2>/dev/null || true
-    local w=$((TERM_COLS - 22)); [ "$w" -lt 10 ] && w=10
-    local filled=$(( w * pct / 100 )) empty=$(( w - filled ))
+
+    local w=$(( TERM_COLS - 22 ))
+    [ "$w" -lt 10 ] && w=10
+
+    # NB: don't chain dependent assignments in one `local` — under `set -u`
+    # bash expands all RHS expressions before assigning any of the names,
+    # so `empty=$((w - filled))` would see `filled` as unbound.
+    local filled empty
+    filled=$(( w * pct / 100 ))
+    empty=$(( w - filled ))
+
     local i idx
     for ((i=0; i<filled; i++)); do
         idx=$(( i * RAINBOW_N / w ))
@@ -168,7 +169,7 @@ run_termux() {
     setup_bar
     echo
     banner "DDBox  ──  autoinstallation wizard"
-    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.0.9${RST}\n"
+    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.0.10${RST}\n"
     echo
 
     step "Updating Termux packages"
@@ -179,12 +180,11 @@ run_termux() {
 
     step "Checking Debian rootfs"
     # Login probe — the most reliable "is Debian usable?" test.
-    # Works regardless of proot-distro's on-disk layout or version.
     if proot-distro login debian -- true >/dev/null 2>&1; then
         ok "Debian already installed — skipping, proceeding to login"
     else
         info "Installing Debian rootfs (this can take a while)..."
-        # Termux has no /tmp — use $TMPDIR (=$PREFIX/tmp) with safe fallback
+        # Termux has no writable /tmp — use $TMPDIR (=$PREFIX/tmp) with fallback
         DDLOG="${TMPDIR:-${PREFIX:-/data/data/com.termux/files/usr}/tmp}/ddbox-pd-install.log"
         mkdir -p "$(dirname "$DDLOG")" 2>/dev/null || true
         proot-distro install debian 2>&1 | tee "$DDLOG"
@@ -264,7 +264,7 @@ run_debian() {
     setup_bar
     echo
     banner "DDBox  ──  Debian install (2 of 2)"
-    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.0.9${RST}\n"
+    printf "  ${C_DIM}Author: D373Y 5373M   Version 1.0.10${RST}\n"
     echo
 
     step "Updating APT index"
