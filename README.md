@@ -43,7 +43,7 @@ Copy and paste the following block into Termux. This will install Git, clone the
 pkg update -y && pkg upgrade -y && pkg install -y git proot-distro
 git clone https://github.com/DeleySelem/ddbox
 cd ddbox
-bash autoinstall.sh
+bash autoinstall_1.sh
 ```
 
 Follow the on-screen instructions. Once Debian is installed, log into it:
