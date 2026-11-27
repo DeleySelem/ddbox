@@ -13,7 +13,7 @@ bash setup.sh
 echo ""
 echo "[*] Installing Post-Quantum Crypto Dependencies..."
 
-apt-get *cryptography
+apt-get install *cryptography
 apt-get install *fips203
 
 echo "[+] Crypto dependencies successfully compiled and installed."
