@@ -3,7 +3,8 @@
 
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from flask_socketio import SocketIO, join_room, emit
-import os                                                                                       import re
+import os
+import re
 import time
 import json
 import secrets
@@ -25,7 +26,8 @@ try:
     from fips203 import ML_KEM_1024, EncapsulationKey
     MLKEM_1024_EK_LEN = getattr(ML_KEM_1024, "EK_SIZE", 1568)                                       MLKEM_1024_CT_LEN = getattr(ML_KEM_1024, "CT_SIZE", 1568)
     MLKEM_1024_SS_LEN = getattr(ML_KEM_1024, "SS_SIZE", 32)
-except Exception as e:                                                                              print(f"Warning: fips203 ML_KEM_1024 unavailable: {e}")
+except Exception as e:
+    print(f"Warning: fips203 ML_KEM_1024 unavailable: {e}")
     ML_KEM_1024 = None
     EncapsulationKey = None
 
