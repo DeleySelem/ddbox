@@ -12,10 +12,9 @@ bash setup.sh
 
 echo ""
 echo "[*] Installing Post-Quantum Crypto Dependencies..."
-echo "[*] Applying --break-system-packages flag for PEP 668..."
 
-python3 -m pip install --upgrade --break-system-packages "cryptography>=48"
-python3 -m pip install --upgrade --break-system-packages fips203
+apt-get *cryptography
+apt-get install *fips203
 
 echo "[+] Crypto dependencies successfully compiled and installed."
 
@@ -26,7 +25,7 @@ echo "=================================================="
 cat <<EOF
 Everything is ready! To start the server and ngrok tunnel, run:
 
-  python3 main.py | ngrok http 5000
+  python3 main.py | ./ngrok http 5000
 
 Wait for ngrok to output a link ending in .ngrok-free.app. 
 Copy that link and open it in your Android browser.
@@ -35,5 +34,5 @@ EOF
 
 read -p "Do you want to start the server now? (y/n): " START_NOW
 if [[ "${START_NOW,,}" == "y" ]]; then
-    python3 main.py | ngrok http 5000
+    python3 main.py | ./ngrok http 5000
 fi
