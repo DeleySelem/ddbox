@@ -24,7 +24,7 @@ echo -e "\n${CYAN}[*] Updating APT and installing build tools (rust, ssl, ffi)..
 apt update && apt upgrade -y
 apt install -y git curl unzip wget build-essential libssl-dev libffi-dev rustc cargo python3-pip python3-venv
 
-# Install ngrok (via official APT repo)
+# Install ngrok
 echo -e "\n${CYAN}[*] Installing ngrok...${NC}"
 if ! command -v ngrok >/dev/null 2>&1; then
     echo -e "Downloading ngrok..."
