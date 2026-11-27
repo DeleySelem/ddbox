@@ -1,6 +1,6 @@
-# DDBox (D373Y 5373M)
+# DDBox
 
-**DDBox** is a secure, decentralized, end-to-end encrypted (E2EE) communication platform designed for ephemeral, high-security environments. 
+**DDBox** is a secure, decentralized, end-to-end encrypted (E2EE) communication platform designed for ephemeral, high-security environments for deaddrop -style communication. 
 
 ## 🛡️ Security Architecture & Standards
 
