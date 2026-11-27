@@ -53,13 +53,14 @@ EOF
 echo
 read -p "Paste your ngrok auth-token here: " NGROK_TOKEN
 if [[ -n "$NGROK_TOKEN" ]]; then
-    ngrok config add-authtoken "$NGROK_TOKEN"
+    ./ngrok authtoken "$NGROK_TOKEN"
     echo -e "${GREEN}[+] Auth token saved.${NC}"
 else
-    echo -e "${YELLOW}[!] No token entered. You will need to run: ngrok config add-authtoken <TOKEN>${NC}"
+    echo -e "${YELLOW}[!] No token entered. You will need to run: ./ngrok config add-authtoken or ./ngrok authtoken <TOKEN>${NC}"
 fi
 
 # Next Steps
 echo -e "\n${CYAN}=== Next Step: Run Part 3 ===${NC}"
 echo -e "System environment is ready! To finish installation and launch, run:\n"
-echo -e "  ${YELLOW}bash autoinstall_3.sh${NC}\n"
+echo -e "Running:  ${YELLOW}bash autoinstall_3.sh${NC}\n"
+bash autoinstall_3.sh
