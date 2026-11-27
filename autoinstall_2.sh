@@ -53,10 +53,10 @@ EOF
 echo
 read -p "Paste your ngrok auth-token here: " NGROK_TOKEN
 if [[ -n "$NGROK_TOKEN" ]]; then
-    ./ngrok authtoken "$NGROK_TOKEN"
+    ngrok authtoken "$NGROK_TOKEN"
     echo -e "${GREEN}[+] Auth token saved.${NC}"
 else
-    echo -e "${YELLOW}[!] No token entered. You will need to run: ./ngrok config add-authtoken or ./ngrok authtoken <TOKEN>${NC}"
+    echo -e "${YELLOW}[!] No token entered. You will need to run: ngrok config add-authtoken or ./ngrok authtoken <TOKEN>${NC}"
 fi
 
 # Next Steps
