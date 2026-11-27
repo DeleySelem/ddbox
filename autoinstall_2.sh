@@ -27,13 +27,8 @@ apt install -y git curl unzip wget build-essential libssl-dev libffi-dev rustc c
 # Install ngrok (via official APT repo)
 echo -e "\n${CYAN}[*] Installing ngrok...${NC}"
 if ! command -v ngrok >/dev/null 2>&1; then
-    echo -e "Downloading ngrok APT repository..."
-    curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
-      | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
-      && echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
-      | tee /etc/apt/sources.list.d/ngrok.list >/dev/null \
-      && apt update \
-      && apt install -y ngrok
+    echo -e "Downloading ngrok..."
+    curl -fsSL https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.tgz | tar -xz
 
     echo -e "${GREEN}[+] ngrok installed successfully.${NC}"
 else
