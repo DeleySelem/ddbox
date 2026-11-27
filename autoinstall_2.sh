@@ -34,10 +34,14 @@ apt install -y git curl unzip wget build-essential libssl-dev libffi-dev rustc c
 title "Installing ngrok (ARM64)"
 if ! command -v ngrok >/dev/null 2>&1; then
     printf " ${C_WHITE}→${RST} ${C_LGRAY}Downloading ngrok binary for Android (ARM64)...${RST}\n"
-    curl -fsSL https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.zip -o ngrok.zip
-    unzip -o ngrok.zip -d /usr/local/bin/
-    chmod +x /usr/local/bin/ngrok
-    rm ngrok.zip
+
+    curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+  | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
+  && echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
+  | tee /etc/apt/sources.list.d/ngrok.list \
+  && apt update \
+  && apt install ngrok
+
     printf " ${C_WHITE}✓${RST} ${C_LGRAY}ngrok installed successfully.${RST}\n"
 else
     printf " ${C_WHITE}✓${RST} ${C_LGRAY}ngrok is already installed.${RST}\n"
