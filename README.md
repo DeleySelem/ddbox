@@ -36,8 +36,8 @@ The repository includes **three automated installation scripts** to make this pr
    > ⚠️ **WARNING:** Do **NOT** use the Google Play Store version of Termux. It is deprecated and contains surveillance backdoors.
 4. Open Termux.
 
-### Step 2: Bootstrap Environment (`autoinstall.sh`)
-Copy and paste the following block into Termux. This will install Git, clone the repository, and run the first autoinstaller to set up Debian.
+### Step 2: Bootstrap Environment (`autoinstall_1.sh`)
+Copy and paste the following block into Termux. This will install Git, clone the repository, and run the three autoinstallers.
 
 ```bash
 pkg update -y && pkg upgrade -y && pkg install -y git proot-distro
@@ -45,6 +45,8 @@ git clone https://github.com/DeleySelem/ddbox
 cd ddbox
 bash autoinstall_1.sh
 ```
+
+### If autoinstall fails
 
 Follow the on-screen instructions. Once Debian is installed, log into it:
 
