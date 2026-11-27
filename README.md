@@ -85,7 +85,7 @@ Copy the printed 64-character hex key and save it securely. You will paste this 
 
 Step 6: Connect
 
-1. Wait for ngrok to output a URL ending in https://xxxx-xxx-xxx-xxx-xx.ngrok-free.app.
+1. Wait for ngrok to output a URL looking like: https://xxxx-xxx-xxx-xxx-xx.ngrok-free.app where x is number/letter.
 2. If the ngrok warning page appears, click "Visit Site" (this only happens on the free tier).
 3. Paste your Offline Key into the DDBox UI.
 4. Keep both the Termux terminal and your browser open to prevent connection drops.
