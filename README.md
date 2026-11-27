@@ -46,6 +46,8 @@ cd ddbox
 bash autoinstall_1.sh
 ```
 
+This will create 'ddbox' folder in Termux terminal from which it only runs autoinstaller_1.sh to install proot-distro debian, login and clone the working ddbox folder and dependencies inside the Debian. You can delete the ddbox folder from Termux files after installatiln is done.
+
 ### If autoinstall fails
 
 Follow the on-screen instructions. Once Debian is installed, log into it:
