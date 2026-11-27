@@ -15,7 +15,7 @@ echo "[*] Installing Post-Quantum Crypto Dependencies..."
 
 apt-get install *cryptography
 apt-get install *fips203
-
+apt upgrade -y
 echo "[+] Crypto dependencies successfully compiled and installed."
 
 echo ""
