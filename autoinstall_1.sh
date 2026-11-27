@@ -44,6 +44,8 @@ echo ""
 echo -e "${CYAN}=== Next Step: Login to Debian and Clone DDBox ===${NC}"
 cat <<EOF
 
+If autoinstallation fails to login Debian: 
+
 You must now log into Debian. Copy and paste this exact command:
 
   proot-distro login debian
@@ -56,3 +58,6 @@ Once your prompt changes to ${RED}root@localhost:~#${NC}, run this block:
   bash autoinstall_2.sh
 
 EOF
+echo "DDBox --- Autoinstallation continues..."
+echo "
+proot-distro login debian -- bash -c "apt update && apt install -y git && git clone https://github.com/DeleySelem/ddbox && cd ddbox && bash autoinstall_2.sh"
